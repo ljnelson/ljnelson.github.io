@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Blog on Blame Laird</title>
+    <link>https://ljnelson.github.io/blog/</link>
+    <description>Recent content in Blog on Blame Laird</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Fri, 17 Dec 2021 14:18:00 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Welcome</title>
+      <link>https://ljnelson.github.io/blog/welcome/</link>
+      <pubDate>Fri, 17 Dec 2021 16:08:01 -0800</pubDate>
+      
+      <guid>https://ljnelson.github.io/blog/welcome/</guid>
+      <description>Hello and welcome to my new blog.
+My old blog is still available.</description>
+    </item>
+    
+  </channel>
+</rss>

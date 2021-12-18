@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on Blame Laird</title>
+    <link>https://ljnelson.github.io/tags/</link>
+    <description>Recent content in Tags on Blame Laird</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Fri, 17 Dec 2021 16:08:01 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>personal</title>
+      <link>https://ljnelson.github.io/tags/personal/</link>
+      <pubDate>Fri, 17 Dec 2021 16:08:01 -0800</pubDate>
+      
+      <guid>https://ljnelson.github.io/tags/personal/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

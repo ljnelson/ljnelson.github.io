@@ -1,0 +1,5 @@
+.DS_Store
+*.bak
+*~
+.hugo_build.lock
+
