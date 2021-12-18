@@ -10,7 +10,7 @@ theme = "minimo"
 publishDir = 'docs'
 
 disqusShortname = ""
-googleAnalytics = "297223318"
+googleAnalytics = "G-VPDL2GWEZY"
 
 Paginate = 5
 preserveTaxonomyNames = true
