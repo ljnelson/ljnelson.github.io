@@ -10,12 +10,14 @@ tags: ['java', 'jndi', 'config']
 
 I've written
 [previously](https://lairdnelson.wordpress.com/2021/11/07/configuration-and-dependency-acquisition/)
-about how Java configuration systems boiled down to their essence are
-simply systems for loading Java objects that are described in a
+about how Java configuration systems, boiled down to their essence,
+are simply systems for loading Java objects that are described in a
 particular way, usually by some kind of name (along with
 [qualifiers](https://lairdnelson.wordpress.com/2021/12/07/qualifiers-and-configuration-coordinates-in-configuration/)),
 and that such systems have absolutely [nothing to do with dependency
-injection](https://lairdnelson.wordpress.com/2021/11/07/configuration-and-dependency-acquisition/).
+injection](https://lairdnelson.wordpress.com/2021/11/07/configuration-and-dependency-acquisition/)
+or object binding or all the rest of the shiny but irrelevant things
+people like to get excited about in this space.
 
 These ideas are not new.  In the Java enterprise world, they first
 showed up in a systematic way in the [Java Naming and Directory
@@ -37,36 +39,44 @@ Specification to identify a component's environment, but, as we'll
 see, the concept underlying this prefix is critical, regardless of how
 clunky the actual implementation turned out to be.
 
-Now it is routinely rejected more because of its age than because of
-any technical limitations it might have.  Having said that, it most
-certainly shows its age, and not in a good way.
+Now JNDI is routinely rejected more simply because of its age than
+because of any technical limitations it might have.  Most people have
+no idea what it can do.  Having said that, it most certainly does show
+its age, and not in a good way.
 
 So why _would_ we look at all this?  Because to this day it is the
 only Java-related configuration-like system that has appropriately
 considered most, if not all, the concerns that arise when you talk
 about loading Java objects that are qualified in some way into a
-class—the very heart of Java-centric configuration use cases.
+class—the very heart of Java-centric configuration use cases:
+
+* It accounts for name collisions.
+* It has symbolic links.
+* It allows for user-supplied name resolution mechanisms.
+* It allows for user-supplied namespaces.
+* It permits qualifiers to help describe a lookup.
+* It does not mandate an object binding strategy.
 
 It's somewhat bizarre to note that the Java-centric configuration
 frameworks currently _en vogue_ are so comparatively deficient:
 
- * MicroProfile Config certainly has not considered these concerns.
-   (As I've [written
-   before](https://lairdnelson.wordpress.com/2021/10/14/some-of-the-things-i-dont-like-about-microprofile-config/),
-   it is non-deterministic and subject to namespace clashes.)
+* MicroProfile Config certainly has not considered these concerns.
+  (As I've [written
+  before](https://lairdnelson.wordpress.com/2021/10/14/some-of-the-things-i-dont-like-about-microprofile-config/),
+  it is non-deterministic and subject to namespace clashes.)
 
- * Lightbend's TypeSafe Config has not considered these concerns.
-   (Names are considered to be absolute.)
+* Lightbend's TypeSafe Config has not considered these concerns.
+  (Names are considered to be absolute.)
 
- * Spring has not considered these concerns.  (Names are considered to
-   be absolute and configured objects are presumed to "belong" to the
-   Spring ecosystem.)
+* Spring has not considered these concerns.  (Names are considered to
+  be absolute and configured objects are presumed to "belong" to the
+  Spring ecosystem.)
    
- * Jakarta Config is stumbling backwards into these concerns without
-   realizing they are valid concerns, and is repeating the egregious
-   mistakes of MicroProfile Config before it.  (It is
-   non-deterministic and subject to namespace clashes and is focusing
-   its standardization efforts in irrelevant places.)
+* Jakarta Config is stumbling backwards into these concerns without
+  realizing they are valid concerns, and is repeating the egregious
+  mistakes of MicroProfile Config before it.  (It is non-deterministic
+  and subject to namespace clashes and is focusing its standardization
+  efforts in irrelevant places.)
 
 I'm sure there are others.
 
@@ -81,9 +91,11 @@ thing, and [attempts to modernize it, regardless of how trivial, have
 been gently and officially
 rebuffed](https://mail.openjdk.java.net/pipermail/core-libs-dev/2021-August/080696.html).
 For another, it predates the [`java.util.ServiceLoader`]() convention
-of discovering service providers at startup.  Getting past these
-anachronisms and others like them can be a little tricky, but the
-journey is worth it.
+of discovering service providers at startup.  It is, in short, a pain
+in the neck to work with. 
+
+Getting past these anachronisms and others like them can be a little
+tricky, but the journey is worth it.
 
 ## What's In A (Naming Service) Name?
 
@@ -196,11 +208,11 @@ transformations (for example, to transform **foo.c** to **foo.o**).
 demonstrates, inadvertently, that any system that uses a "name" to
 look something up eventually realizes that it _must_ use
 [_qualifiers_](https://lairdnelson.wordpress.com/2021/12/07/qualifiers-and-configuration-coordinates-in-configuration/)
-to look something up instead.  JAX-RS matrix parameters are another
-example of this sort of thing.  There's plenty more to say about this,
-but not here.)
+to look something up instead.  JAX-RS matrix parameters, and HTTP
+headers, are other examples of this sort of thing.  There's plenty
+more to say about this, but not here.)
 
-### JNDI
+## JNDI
 
 JNDI's naming services are a very straightforward translation of the
 language-independent terminology of the Naming Service Specification
@@ -232,10 +244,10 @@ Like the Naming Service Specification, any given JNDI
 [`Name`](https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/Name.html)
 is always relative to a parent `Context`.
 
-#### Bootstrapping
+### Bootstrapping
 
-JNDI allows an implementor to bootstrap itself.  This is unique, even
-today.
+JNDI allows an implementor to bootstrap itself.  This is fairly
+unique, even today.
 
 Specifically, the
 [`InitialContext`](https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/InitialContext.html)
@@ -254,7 +266,7 @@ In today's Java world, someone would probably have introduced
 for finding the root `Context`.  In JNDI, you just call `new
 InitialContext()` and you're done, as it should be.
 
-#### Retrieval Operations
+### Retrieval Operations
 
 From the looking-things-up perspective, that's about it.  Get your
 hands on a
@@ -273,7 +285,7 @@ were expecting.  More on that later.  Peeking ahead for a moment, a
 name always has a conceptual type that the caller, for the most part,
 is expecting.
 
-#### Binding Operations
+### Binding Operations
 
 Since JNDI emerged from the CORBA world and was a faithful carryover
 of the Naming Service Specification, it also handled the "writing
@@ -284,7 +296,7 @@ required that `Context`s exposed to the end user be read-only, and
 it's a regrettable fact (in my opinion) that the mutating operations
 of JNDI were not split into their own sub-specification.
 
-#### Name-to-`Object` Bindings
+### Name-to-`Object` Bindings
 
 For ordinary use cases, a `Name` in JNDI is always conceptually bound
 to some kind of `Object`.  This means that a `Name`, regardless of how
@@ -297,7 +309,7 @@ you already know the name of the thing you're looking up.  What's
 mainly important here is that a `Name`, when resolved against a
 `Context`, is effectively typed by a Java class.
 
-#### Synthesizing Operations
+### Synthesizing Operations
 
 JNDI has a facility, not found in the Naming Service Specification,
 that permits some other Java object to synthesize a Java object out of
@@ -323,7 +335,7 @@ name "`hoopy`"; you asked for the `Object` bound under "`hoopy`"; and
 lo and behold you got back that very string—perhaps "`frood`"—as a
 Java `String` object.  Nothing fancy here.
 
-##### `ObjectFactory`
+#### `ObjectFactory`
 
 In other cases, an
 [`ObjectFactory`](https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/spi/ObjectFactory.html)
@@ -346,7 +358,7 @@ too.  An administrator can bind a [`Reference`]() into a JNDI
 implementation that explicitly names the `ObjectFactory` to use to
 perform the actual name resolution.
 
-###### URL Context Factory
+##### URL Context Factory
 
 One kind of `ObjectFactory` is one that plays the role of a _URL
 context factory_.  These kinds of `ObjectFactory` implementations can
@@ -369,6 +381,13 @@ relative to `java:comp/env` in both cases.
 
 No Java-centric configuration framework that I'm aware of other than
 JNDI addresses this extremely important concern.
+
+### Event Operations
+
+JNDI features [events that can be
+fired](https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/event/EventContext.html)
+when a bound object changes, or when an object has been added or
+removed.
 
 ## Putting It All Together
 
@@ -423,6 +442,92 @@ following:
       [`NamingManager::getObjectInstance`](https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/spi/NamingManager.html#getObjectInstance(java.lang.Object,javax.naming.Name,javax.naming.Context,java.util.Hashtable))
       method.
 
+## JNDI Flaws
 
+So is JNDI the hipster configuration system that has been hiding in
+plain sight?  Yes and no.
 
+We've seen that it gets the separation of concerns right, and that its
+lookup features are relatively simple, and that it is unique among
+configuration systems in understanding the importance of namespaces.
+But there are plenty of problems.
+
+### No Generics
+
+First of all, in modern Java, you may not be looking for a `List`
+under a specific name, but a `List<String>`.  JNDI predates generics,
+so you'll have to do a lot of casting when you use this API.
+
+### Binding and Lookup Services Colocated
+
+Next, a `Context` has a rather large number of methods because the
+lookup and binding services were combined into one interface.  In
+hindsight, this was a mistake.
+
+### Vague Qualifiers
+
+`Context` instances have the ability to have "environments", which are
+`Hashtable`s (yes, `Hashtable`s; JNDI predates the collections APIs)
+but whose purpose is left vague.  Like any specification that features
+an untyped bag of named properties, this is usually a sign that some
+aspect of the problem domain wasn't really understood too well.
+
+If you look at it one way, a `Context`'s environment is really
+additional qualifiers qualifying lookups.  For configuration system
+purposes, this concept, which I've argued is necessary, needs to be
+tightened up a little bit.
+
+### Too Many Checked Exceptions
+
+JNDI was created when checked exceptions were all the rage.  This
+makes using it in today's Java projects laborious and unpleasant.
+Easy use cases, like using a default value in case a bound value is
+not present, are quite difficult as a result.
+
+### Can't Use `Class` or `Type` as a Selector
+
+The fact that it is a `Name`, and not some other kind of key, that is
+used to select `Object`s is mostly arbitrary and rooted in CORBA's
+distributed objects background.  For Java-centric configuration
+systems, what matters most of the time is the type of `Object` the
+caller is seeking.  Names in this use case are secondary and used
+mostly to disambiguate, for example, one kind of `Frood` from another
+kind of `Frood` (perhaps the caller wants the `hoopy` `Frood` and not
+the unnamed `Frood`).  JNDI requires that there be names for
+_everything_, even where they are superfluous.
+
+### Strange Service Provider Location Machinery
+
+JNDI predates the `java.util.ServiceLoader` class, so it's no surprise
+that its mechanism for finding service provider classes is a bit
+arcane.
+
+### Too Much Hierarchy
+
+As noted earlier, for configuration system purposes, a tree model is
+not necessary.  In most specifications, if you find that something is
+not necessary, you leave it out.  There doesn't seem to be a need for
+there to be an intermediate `Context` "in between" any two name
+components, but it fit a mental model the Naming Service Specification
+authors were familiar with, and JNDI tracked that specification, so
+here we are.
+
+## Conclusion
+
+JNDI is an old and clunky API with solid conceptual underpinnings that
+addresses most, if not all, concerns that any Java-centric
+configuration system will encounter.  It is worth using as a kind of
+rubric to check any configuration system implementation against for
+correctness.
+
+## What's Next
+
+In a future post, I hope to write about JAX-RS from a Java-centric
+configuration system perspective.  Seen through this lens, JAX-RS is a
+very interesting system for acquiring Java `Object`s based on a
+combination of names and qualifiers and MIME types, auto-discovering
+providers and negotiating and resolving ambiguities.  If you combine
+its concepts with JNDI's notion of namespaces and self-bootstrapping,
+a design for a Java-centric configuration system falls out rather
+easily.
 
