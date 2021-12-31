@@ -31,6 +31,9 @@ lineNumbersInTable = true
 style = 'friendly'
 tabWidth = 2
 
+[markup.tableOfContents]
+endLevel = 4
+
 pluralizelisttitles = false
 
 [params.info]

@@ -7,6 +7,15 @@
     <generator>Hugo -- gohugo.io</generator>
     <lastBuildDate>Fri, 17 Dec 2021 14:18:00 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Java Configuration: JNDI and Naming Operations</title>
+      <link>https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/</link>
+      <pubDate>Thu, 30 Dec 2021 16:22:37 -0800</pubDate>
+      
+      <guid>https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/</guid>
+      <description>Table Of Contents  Background and Rationale What&amp;rsquo;s In A (Naming Service) Name?  The Object Management Group Naming Service Specification JNDI  Bootstrapping Retrieval Operations Binding Operations Name-to-Object Bindings Synthesizing Operations     Putting It All Together    Background and Rationale I&amp;rsquo;ve written previously about how Java configuration systems boiled down to their essence are simply systems for loading Java objects that are described in a particular way, usually by some kind of name (along with qualifiers), and that such systems have absolutely nothing to do with dependency injection.</description>
+    </item>
+    
+    <item>
       <title>Welcome</title>
       <link>https://ljnelson.github.io/blog/welcome/</link>
       <pubDate>Fri, 17 Dec 2021 16:08:01 -0800</pubDate>

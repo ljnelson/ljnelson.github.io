@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Home on Blame Laird</title>
-    <link>https://ljnelson.github.io/</link>
-    <description>Recent content in Home on Blame Laird</description>
+    <title>config on Blame Laird</title>
+    <link>https://ljnelson.github.io/tags/config/</link>
+    <description>Recent content in config on Blame Laird</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Thu, 16 Dec 2021 14:37:22 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 30 Dec 2021 16:22:37 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/tags/config/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Java Configuration: JNDI and Naming Operations</title>
       <link>https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/</link>
@@ -13,25 +13,6 @@
       
       <guid>https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/</guid>
       <description>Table Of Contents  Background and Rationale What&amp;rsquo;s In A (Naming Service) Name?  The Object Management Group Naming Service Specification JNDI  Bootstrapping Retrieval Operations Binding Operations Name-to-Object Bindings Synthesizing Operations     Putting It All Together    Background and Rationale I&amp;rsquo;ve written previously about how Java configuration systems boiled down to their essence are simply systems for loading Java objects that are described in a particular way, usually by some kind of name (along with qualifiers), and that such systems have absolutely nothing to do with dependency injection.</description>
-    </item>
-    
-    <item>
-      <title>Welcome</title>
-      <link>https://ljnelson.github.io/blog/welcome/</link>
-      <pubDate>Fri, 17 Dec 2021 16:08:01 -0800</pubDate>
-      
-      <guid>https://ljnelson.github.io/blog/welcome/</guid>
-      <description>Hello and welcome to my new blog.
-My old blog is still available.</description>
-    </item>
-    
-    <item>
-      <title>Search</title>
-      <link>https://ljnelson.github.io/search/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://ljnelson.github.io/search/</guid>
-      <description></description>
     </item>
     
   </channel>

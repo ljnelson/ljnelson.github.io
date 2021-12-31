@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang='en' dir='auto'><head>
+  <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='description' content='Table Of Contents  Background and Rationale What&rsquo;s In A (Naming Service) Name?  The Object Management Group Naming Service Specification JNDI  Bootstrapping Retrieval Operations Binding Operations Name-to-Object Bindings Synthesizing Operations     Putting It All Together    Background and Rationale I&rsquo;ve written previously about how Java configuration systems boiled down to their essence are simply systems for loading Java objects that are described in a particular way, usually by some kind of name (along with qualifiers), and that such systems have absolutely nothing to do with dependency injection.'>
+<meta name='theme-color' content='#001dc0'>
+
+<meta property='og:title' content='Java Configuration: JNDI and Naming Operations • Blame Laird'>
+<meta property='og:description' content='Table Of Contents  Background and Rationale What&rsquo;s In A (Naming Service) Name?  The Object Management Group Naming Service Specification JNDI  Bootstrapping Retrieval Operations Binding Operations Name-to-Object Bindings Synthesizing Operations     Putting It All Together    Background and Rationale I&rsquo;ve written previously about how Java configuration systems boiled down to their essence are simply systems for loading Java objects that are described in a particular way, usually by some kind of name (along with qualifiers), and that such systems have absolutely nothing to do with dependency injection.'>
+<meta property='og:url' content='https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/'>
+<meta property='og:site_name' content='Blame Laird'>
+<meta property='og:type' content='article'><meta property='article:section' content='blog'><meta property='article:tag' content='java'><meta property='article:tag' content='jndi'><meta property='article:tag' content='config'><meta property='article:published_time' content='2021-12-30T16:22:37-08:00'/><meta property='article:modified_time' content='2021-12-30T16:22:37-08:00'/><meta name='twitter:card' content='summary'>
+
+<meta name="generator" content="Hugo 0.91.2" />
+
+  <title>Java Configuration: JNDI and Naming Operations • Blame Laird</title>
+  <link rel='canonical' href='https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/'>
+  
+  
+  <link rel='icon' href='/images/dougflag.svg'>
+<link rel='stylesheet' href='/assets/css/main.ab98e12b.css'><link rel='stylesheet' href='/css/custom.css'><style>
+:root{--color-accent:#001dc0;}
+</style>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPDL2GWEZY"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-VPDL2GWEZY', { 'anonymize_ip': false });
+}
+</script>
+
+  
+
+</head>
+<body class='page type-blog has-sidebar'>
+
+  <div class='site'><div id='sidebar' class='sidebar'>
+  <a class='screen-reader-text' href='#main-menu'>Skip to Main Menu</a>
+
+  <div class='container'><section class='widget widget-about sep-after'>
+  <header>
+    
+    <div class='logo'>
+      <a href='/'>
+        <img src='/images/dougflag.png'>
+      </a>
+    </div>
+    
+    <h2 class='title site-title '>
+      <a href='/'>
+      Blame Laird
+      </a>
+    </h2>
+    <div class='desc'>
+    Sum Ergo Mea Culpa Est
+    </div>
+  </header>
+
+</section>
+<section class='widget widget-search sep-after'>
+  <header>
+    <h4 class='title widget-title'>Search</h4>
+  </header>
+
+  <form action='/search' id='search-form' class='search-form'>
+    <label>
+      <span class='screen-reader-text'>Search</span>
+      <input id='search-term' class='search-term' type='search' name='q' placeholder='Search&hellip;'>
+    </label></form>
+
+</section>
+<section class='widget widget-taxonomy_cloud sep-after'>
+  <header>
+    <h4 class='title widget-title'>Tags</h4>
+  </header>
+
+  <div class='container list-container'>
+  <ul class='list taxonomy-cloud'><li>
+        <a href='/tags/config/' style='font-size:1em'>config</a>
+      </li><li>
+        <a href='/tags/java/' style='font-size:1em'>java</a>
+      </li><li>
+        <a href='/tags/jndi/' style='font-size:1em'>jndi</a>
+      </li><li>
+        <a href='/tags/personal/' style='font-size:1em'>personal</a>
+      </li></ul>
+</div>
+
+
+</section>
+</div>
+
+  <div class='sidebar-overlay'></div>
+</div><div class='main'><nav id='main-menu' class='menu main-menu' aria-label='Main Menu'>
+  <div class='container'>
+    <a class='screen-reader-text' href='#content'>Skip to Content</a>
+
+<button id='sidebar-toggler' class='sidebar-toggler' aria-controls='sidebar'>
+  <span class='screen-reader-text'>Toggle Sidebar</span>
+  <span class='open'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="3" y1="12" x2="21" y2="12" />
+<line x1="3" y1="6" x2="21" y2="6" />
+<line x1="3" y1="18" x2="21" y2="18" />
+</svg>
+</span>
+  <span class='close'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="18" y1="6" x2="6" y2="18" />
+<line x1="6" y1="6" x2="18" y2="18" />
+</svg>
+</span>
+</button>
+    <ul><li class='item'>
+        <a href='/'>Home</a>
+      </li><li class='item'>
+        <a href='https://about.me/lairdnelson'>About</a>
+      </li><li class='item current'>
+        <a aria-current='page' href='/blog/'>Blog</a>
+      </li></ul>
+  </div>
+</nav><div class='header-widgets'>
+        <div class='container'>
+    
+    <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
+  <section class='widget widget-breadcrumbs sep-after'>
+    <nav id='breadcrumbs'>
+      <ol><li><a href='/'>Home</a></li><li><a href='/blog/'>Blog</a></li><li><span>Java Configuration: JNDI and Naming Operations</span></li></ol>
+    </nav>
+  </section></div>
+      </div>
+
+      <header id='header' class='header site-header'>
+        <div class='container sep-after'>
+          <div class='header-info'><p class='site-title title'>Blame Laird</p><p class='desc site-desc'>Sum Ergo Mea Culpa Est</p>
+          </div>
+        </div>
+      </header>
+
+      <main id='content'>
+
+
+<article lang='en' class='entry'>
+  <header class='header entry-header'>
+  <div class='container sep-after'>
+    <div class='header-info'>
+      <h1 class='title'>Java Configuration: JNDI and Naming Operations</h1>
+      
+
+    </div>
+    <div class='entry-meta'>
+  <span class='posted-on'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+<line x1="16" y1="2" x2="16" y2="6" />
+<line x1="8" y1="2" x2="8" y2="6" />
+<line x1="3" y1="10" x2="21" y2="10" />
+</svg>
+<span class='screen-reader-text'>Posted on </span>
+  <time class='entry-date' datetime='2021-12-30T16:22:37-08:00'>2021-12-30</time>
+</span>
+
+  
+  
+<span class='reading-time'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><circle cx="12" cy="12" r="10" />
+<polyline points="12 6 12 12 15 15" />
+</svg>
+14 mins read
+</span>
+
+
+</div>
+
+
+  </div>
+</header>
+
+  
+  
+
+  <div class='container entry-content'>
+  <div>
+  <h2 id="table-of-contents">Table Of Contents</h2>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#background-and-rationale">Background and Rationale</a></li>
+    <li><a href="#whats-in-a-naming-service-name">What&rsquo;s In A (Naming Service) Name?</a>
+      <ul>
+        <li><a href="#the-object-management-group-naming-service-specification">The Object Management Group Naming Service Specification</a></li>
+        <li><a href="#jndi">JNDI</a>
+          <ul>
+            <li><a href="#bootstrapping">Bootstrapping</a></li>
+            <li><a href="#retrieval-operations">Retrieval Operations</a></li>
+            <li><a href="#binding-operations">Binding Operations</a></li>
+            <li><a href="#name-to-object-bindings">Name-to-<code>Object</code> Bindings</a></li>
+            <li><a href="#synthesizing-operations">Synthesizing Operations</a></li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#putting-it-all-together">Putting It All Together</a></li>
+  </ul>
+</nav>
+</div>
+
+<h2 id="background-and-rationale">Background and Rationale</h2>
+<p>I&rsquo;ve written
+<a href="https://lairdnelson.wordpress.com/2021/11/07/configuration-and-dependency-acquisition/">previously</a>
+about how Java configuration systems boiled down to their essence are
+simply systems for loading Java objects that are described in a
+particular way, usually by some kind of name (along with
+<a href="https://lairdnelson.wordpress.com/2021/12/07/qualifiers-and-configuration-coordinates-in-configuration/">qualifiers</a>),
+and that such systems have absolutely <a href="https://lairdnelson.wordpress.com/2021/11/07/configuration-and-dependency-acquisition/">nothing to do with dependency
+injection</a>.</p>
+<p>These ideas are not new.  In the Java enterprise world, they first
+showed up in a systematic way in the <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/module-summary.html">Java Naming and Directory
+Interface (JNDI)
+API</a>.
+This API, in turn, is a slight modernization, and idiomatic Java
+translation, of the <a href="https://www.omg.org/spec/NAM/1.3/PDF">Object Management Group&rsquo;s Naming Service
+Specification</a>, which quietly
+stagnated sometime in 2004.</p>
+<p>Somewhere along the line, JNDI got (wrongly) pigeonholed as just a
+way to access LDAP servers.  I&rsquo;m going to ignore that entire side of
+things (the &ldquo;directory&rdquo; part), because that&rsquo;s not what JNDI primarily
+is at all.</p>
+<p>Then it got demonized because of the <code>java:</code> URL scheme and the
+<code>comp/env</code> naming prefix mandated by the Java EE Platform
+Specification to identify a component&rsquo;s environment, but, as we&rsquo;ll
+see, the concept underlying this prefix is critical, regardless of how
+clunky the actual implementation turned out to be.</p>
+<p>Now it is routinely rejected more because of its age than because of
+any technical limitations it might have.  Having said that, it most
+certainly shows its age, and not in a good way.</p>
+<p>So why <em>would</em> we look at all this?  Because to this day it is the
+only Java-related configuration-like system that has appropriately
+considered most, if not all, the concerns that arise when you talk
+about loading Java objects that are qualified in some way into a
+class—the very heart of Java-centric configuration use cases.</p>
+<p>It&rsquo;s somewhat bizarre to note that the Java-centric configuration
+frameworks currently <em>en vogue</em> are so comparatively deficient:</p>
+<ul>
+<li>
+<p>MicroProfile Config certainly has not considered these concerns.
+(As I&rsquo;ve <a href="https://lairdnelson.wordpress.com/2021/10/14/some-of-the-things-i-dont-like-about-microprofile-config/">written
+before</a>,
+it is non-deterministic and subject to namespace clashes.)</p>
+</li>
+<li>
+<p>Lightbend&rsquo;s TypeSafe Config has not considered these concerns.
+(Names are considered to be absolute.)</p>
+</li>
+<li>
+<p>Spring has not considered these concerns.  (Names are considered to
+be absolute and configured objects are presumed to &ldquo;belong&rdquo; to the
+Spring ecosystem.)</p>
+</li>
+<li>
+<p>Jakarta Config is stumbling backwards into these concerns without
+realizing they are valid concerns, and is repeating the egregious
+mistakes of MicroProfile Config before it.  (It is
+non-deterministic and subject to namespace clashes and is focusing
+its standardization efforts in irrelevant places.)</p>
+</li>
+</ul>
+<p>I&rsquo;m sure there are others.</p>
+<p><strong>What if we could extract the age-old lookup-and-namespace-related
+concerns that JNDI addresses and re-express them with a modern API?</strong>
+That would make for a pretty decent Java-centric configuration API.</p>
+<p>To catch a glimpse of these concerns and how they are addressed within
+JNDI requires a little bit of squinting.  The JNDI API itself is old
+and outdated by today&rsquo;s standards.  It predates generics, for one
+thing, and <a href="https://mail.openjdk.java.net/pipermail/core-libs-dev/2021-August/080696.html">attempts to modernize it, regardless of how trivial, have
+been gently and officially
+rebuffed</a>.
+For another, it predates the <a href=""><code>java.util.ServiceLoader</code></a> convention
+of discovering service providers at startup.  Getting past these
+anachronisms and others like them can be a little tricky, but the
+journey is worth it.</p>
+<h2 id="whats-in-a-naming-service-name">What&rsquo;s In A (Naming Service) Name?</h2>
+<p>Let&rsquo;s talk about what a naming service does, and why the terms even
+exist, and, as a result, why no one ever thinks of &ldquo;naming service&rdquo; in
+the same breath as &ldquo;configuration&rdquo; (but maybe they should).</p>
+<p>First, we&rsquo;ll talk about JNDI&rsquo;s precursor, the <a href="https://www.omg.org/spec/NAM/1.3/PDF">Object Management
+Group&rsquo;s Naming Service
+Specification</a>.  I know:
+CORBA—but bear with me.</p>
+<h3 id="the-object-management-group-naming-service-specification">The Object Management Group Naming Service Specification</h3>
+<p>Let&rsquo;s revisit the 1990s for a moment.  <a href="https://knowyourmeme.com/memes/how-do-you-do-fellow-kids">How do you do, fellow
+kids?</a></p>
+<p>Back in CORBA&rsquo;s day, you could park distributed objects on one
+machine, and use another machine to look them up, and the calling
+program might be written in an entirely different language from the
+serving program.  The sub-programs doing the actual retrieval and
+serving were known as ORBs: object request brokers.  As you might
+imagine, an object request broker turns a simple local request for a
+particular object into a distributed request for that object, and
+answers such remote requests as well.</p>
+<p>Because CORBA is cross-language, this meant that each ORB had to be
+able to park an object under some kind of location that any requestor
+could specify in some way, regardless of the languages involved.  All
+languages have strings, and CORBA had ironed out the various language-
+and machine-related discrepancies among strings, so the way you
+identified the object you wanted to retrieve from some other ORB was
+to effectively just name it.  So a <em>naming service</em>, then, is
+something that, when given a string-typed, address-like name of some
+kind, gives you back an object bound under that name, suitable for
+immediate use in the calling language.  (Usually there was a hazy
+presumption that something remote-ish had occurred, e.g. you had
+retrieved an object over the network from some other machine
+somewhere.  This was because so-called distributed objects were cool.
+Now we know better, but the (mostly valid) concepts involved apply
+even locally, as we&rsquo;ll see.)</p>
+<p>(More importantly for configuration-related purposes, a name&rsquo;s sole
+function, really, is to help distinguish one typed object from another
+object bearing the same type.)</p>
+<p>Getting ORBs from different vendors to cooperate was tough, so there
+were a lot of specifications that ended up being written by the
+<a href="https://www.omg.org/">Object Management Group</a>.  One of them was a
+specification governing hierarchical naming semantics, named,
+appropriately enough, the <a href="https://www.omg.org/spec/NAM/1.3/PDF">Naming Service
+Specification</a>.</p>
+<p>There&rsquo;s nothing that says, inherently, that a naming service has to be
+hierarchical.  But hierarchies can be convenient, and the Naming
+Service Specification decided to formally specify tree-based naming
+semantics instead of flat ones.  The root of a naming service tree is
+a <em>context</em>; its nodes are <em>objects</em>; its branches are <em>names</em>.</p>
+<p>(A context, of course, is also a kind of object, and again, while
+specifying the notion of a child context is not required, that&rsquo;s how
+the Naming Service Specification decided to do it.)</p>
+<p>(Some of this hierarchical stuff was due to the inherent chattiness of
+CORBA itself: you didn&rsquo;t want to traverse deep graphs with remote
+calls for each traversal operation!  Better to grab a context and use
+it directly to get its stuff.)</p>
+<p>Among other things, all of this means that, in the Naming Service
+Specification, any given name is always relative to a parent context.
+There are no absolute names.  If I give you a name, you don&rsquo;t know
+what it means or designates (in the absence of other information).
+But if I tell you that it&rsquo;s relative to a particular context, then you
+have the tools to be able to <em>resolve</em> the name against that context
+and find the object it points to.  A context turns out to be a
+namespace (among other things).</p>
+<p>(In the world of name-based configuration this concept is absolutely
+critical.  It is ignored by all major Java-centric configuration
+frameworks for no good reason that I can see.)</p>
+<p>In the Naming Service Specification, names have structure.  A sequence
+of <em>components</em> within a name forms a <em>compound name</em>.  Its individual
+components are also known as <em>simple names</em>.  Finally, if you have a
+compound name with two components (simple names), there is also one
+context involved: the one that the first component desginates, and to
+which the second component is relative. (To belabor an earlier point,
+note that the first component (simple name) is relative to some
+context but in this example I haven&rsquo;t told you what it is, so,
+standing on its own, this hypothetical compound name is rather
+useless.)</p>
+<p>The Naming Service Specification also gestures feebly at another type
+of identifier that is sort of part of names: <em>kind</em>.  It reads, in
+part:</p>
+<blockquote>
+<p>The <strong>kind</strong> attribute adds descriptive power to names in a
+syntax-independent way.  Examples of the value of the <strong>kind</strong>
+attribute include <em>c_source</em>, <em>object_code</em>, <em>executable</em>,
+<em>postscript</em>, or “ ”. The naming system does not interpret, assign, or
+manage these values in any way. Higher levels of software may make
+policies about the use and management of these values. This feature
+addresses the needs of applications that use syntactic naming
+conventions to distinguish related objects. For example Unix uses
+suffixes such as <strong>.c</strong> and <strong>.o</strong>. Applications (such as the C
+compiler) depend on these syntactic convention to make name
+transformations (for example, to transform <strong>foo.c</strong> to <strong>foo.o</strong>).</p>
+</blockquote>
+<p>(This reads as a kind of primitive precursor to MIME types.  It also
+demonstrates, inadvertently, that any system that uses a &ldquo;name&rdquo; to
+look something up eventually realizes that it <em>must</em> use
+<a href="https://lairdnelson.wordpress.com/2021/12/07/qualifiers-and-configuration-coordinates-in-configuration/"><em>qualifiers</em></a>
+to look something up instead.  JAX-RS matrix parameters are another
+example of this sort of thing.  There&rsquo;s plenty more to say about this,
+but not here.)</p>
+<h3 id="jndi">JNDI</h3>
+<p>JNDI&rsquo;s naming services are a very straightforward translation of the
+language-independent terminology of the Naming Service Specification
+into relatively idiomatic Java terms.</p>
+<p>JNDI, like the Naming Service Specification, has a <code>Context</code>, which,
+like its namesake, is a locus of
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/Name.html"><code>Name</code>s</a>
+that designate <code>Object</code>s (including other <code>Context</code>s).  (A <code>Context</code>
+belongs to a <em>naming system</em>, which is a conceptual entity seemingly
+introduced by the JNDI specification and not really present in the
+Naming Service Specification.)</p>
+<p>JNDI&rsquo;s
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/Name.html"><code>Name</code>s</a>
+are like those of the Naming Service Specification, but do not
+explicitly include the concept of <em>simple</em> names.  Instead, a JNDI
+name is always either a <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/CompoundName.html">compound
+name</a>,
+even if it has only one component, or a <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/CompositeName.html"><em>composite
+name</em></a>,
+a term not mentioned in the Naming Service Specification.  (Composite
+names were added in a JNDI specification revision, and allow a single
+name to automatically span actual naming systems, with sophisticated
+parsing semantics.)  Within any given naming system, hierarchical or
+flat, you&rsquo;re always working with compound names.</p>
+<p>Like the Naming Service Specification, any given JNDI
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/Name.html"><code>Name</code></a>
+is always relative to a parent <code>Context</code>.</p>
+<h4 id="bootstrapping">Bootstrapping</h4>
+<p>JNDI allows an implementor to bootstrap itself.  This is unique, even
+today.</p>
+<p>Specifically, the
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/InitialContext.html"><code>InitialContext</code></a>
+class is just a <code>Context</code> implementation that finds a &ldquo;real&rdquo; <code>Context</code>
+implementation to use, and then delegates all operations to it.  The
+JNDI bootstrap mechanism, which predates the <code>java.util.ServiceLoader</code>
+service provider approach but which seems to have served as its
+inspiration, allows custom <code>InitialContext</code> implementations to be
+supplied from outside of the framework.</p>
+<p>This means, among other things, the <code>Context</code> to which primordial
+<code>Name</code>s are relative is highly customizable, even by end users.</p>
+<p>In today&rsquo;s Java world, someone would probably have introduced
+(needlessly) a builder-style object, or a whole scaffolding framework
+for finding the root <code>Context</code>.  In JNDI, you just call <code>new InitialContext()</code> and you&rsquo;re done, as it should be.</p>
+<h4 id="retrieval-operations">Retrieval Operations</h4>
+<p>From the looking-things-up perspective, that&rsquo;s about it.  Get your
+hands on a
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/Context.html"><code>Context</code></a>,
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/Context.html#lookup(javax.naming.Name)">ask it for an <code>Object</code> under a particular
+<code>Name</code></a>,
+and make use of the resulting <code>Object</code>.  Where the <code>Object</code> came from,
+how it was bound, whether it was synthesized out of other <code>Object</code>s,
+whether various kinds of links and redirects were followed, whether
+the <code>Object</code> fronts some other kind of system—none of these things are
+your concern.  You named an <code>Object</code>, you resolved that name against a
+<code>Context</code>, and you took delivery of that <code>Object</code>.</p>
+<p>Of particular note, you probably also cast that <code>Object</code> to a type you
+were expecting.  More on that later.  Peeking ahead for a moment, a
+name always has a conceptual type that the caller, for the most part,
+is expecting.</p>
+<h4 id="binding-operations">Binding Operations</h4>
+<p>Since JNDI emerged from the CORBA world and was a faithful carryover
+of the Naming Service Specification, it also handled the &ldquo;writing
+side&rdquo; of naming services.  Placing an <code>Object</code> under a <code>Name</code> in JNDI
+is known as <em>binding</em>.  For my purposes, I&rsquo;ll be ignoring all binding
+operations.  Java EE, in fact, one of the earliest consumers of JNDI,
+required that <code>Context</code>s exposed to the end user be read-only, and
+it&rsquo;s a regrettable fact (in my opinion) that the mutating operations
+of JNDI were not split into their own sub-specification.</p>
+<h4 id="name-to-object-bindings">Name-to-<code>Object</code> Bindings</h4>
+<p>For ordinary use cases, a <code>Name</code> in JNDI is always conceptually bound
+to some kind of <code>Object</code>.  This means that a <code>Name</code>, regardless of how
+many components it might have, also has an effective (Java) type,
+namely, that of the <code>Object</code> that it references.</p>
+<p>JNDI has a few clunky introspective APIs for listing bindings, but for
+my purposes I&rsquo;m going to ignore them, since in configuration use cases
+you already know the name of the thing you&rsquo;re looking up.  What&rsquo;s
+mainly important here is that a <code>Name</code>, when resolved against a
+<code>Context</code>, is effectively typed by a Java class.</p>
+<h4 id="synthesizing-operations">Synthesizing Operations</h4>
+<p>JNDI has a facility, not found in the Naming Service Specification,
+that permits some other Java object to synthesize a Java object out of
+&ldquo;raw materials&rdquo;, any of which may be bound in a tree rooted at any
+<code>Context</code>.  This object doing the synthesizing is called an
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/spi/ObjectFactory.html"><code>ObjectFactory</code></a>.
+A JNDI implementation itself can supply <code>ObjectFactory</code> instances,
+but, more importantly for this article&rsquo;s purposes, so can users and
+component providers.</p>
+<p>This sounds complicated but is actually fairly simple.</p>
+<p>Recall that when you look something up in a JNDI tree rooted under a
+<code>Context</code>, you are blissfully unaware of the name resolution process
+(how the <code>Object</code> that is eventually delivered to you came to exist).
+Was it put together out of other things?  Was it created out of
+nothing?  Was it loaded from disk?  Served over the network?  You
+don&rsquo;t know and you don&rsquo;t care.</p>
+<p>For certain cases, name resolution is absurdly simple: someone
+explicitly bound a textual string into a <code>Context</code> under, say, the
+name &ldquo;<code>hoopy</code>&quot;; you asked for the <code>Object</code> bound under &ldquo;<code>hoopy</code>&quot;; and
+lo and behold you got back that very string—perhaps &ldquo;<code>frood</code>&quot;—as a
+Java <code>String</code> object.  Nothing fancy here.</p>
+<h5 id="objectfactory"><code>ObjectFactory</code></h5>
+<p>In other cases, an
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/spi/ObjectFactory.html"><code>ObjectFactory</code></a>
+gets involved.  This happens because the <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/Context.html#lookup(javax.naming.Name)"><code>Context::lookup</code>
+operation</a>
+delegates, in all implementations that I&rsquo;m aware of, and perhaps
+explicitly stated somewhere, to a call to the
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/spi/NamingManager.html#getObjectInstance(java.lang.Object,javax.naming.Name,javax.naming.Context,java.util.Hashtable)"><code>NamingManager::getObjectInstance</code></a>
+method, which pulls in <code>ObjectFactory</code> instances to actually perform
+the creation (or retrieval, or synthesis, or whatever) of a Java
+<code>Object</code> for a given <code>Name</code>.</p>
+<p>So backing up from the minutiae for a moment, depending on what
+<code>ObjectFactory</code> instances are on the classpath and properly
+designated, a JNDI implementation may synthesize <code>Object</code>s out of thin
+air as if they were bound explicitly to various <code>Name</code>s.</p>
+<p><code>ObjectFactory</code> instances and explicit binding can work together,
+too.  An administrator can bind a <a href=""><code>Reference</code></a> into a JNDI
+implementation that explicitly names the <code>ObjectFactory</code> to use to
+perform the actual name resolution.</p>
+<h6 id="url-context-factory">URL Context Factory</h6>
+<p>One kind of <code>ObjectFactory</code> is one that plays the role of a <em>URL
+context factory</em>.  These kinds of <code>ObjectFactory</code> implementations can
+create <code>Context</code>s to represent particular URL schemes, such as, most
+infamously, <code>java:</code>, which is at the heart of the Java EE (and now
+Jakarta EE) specifications.</p>
+<p>The notorious <code>java:comp/env</code> &ldquo;prefix&rdquo; is, more specifically, a URL
+whose semantics are strictly defined by the Java EE (now Jakarta EE)
+Platform Specification.  <code>java:</code> causes a URL context factory
+specified by the Platform Specification to come into the picture, and
+<code>comp/env</code> is a compound name, relative to the root <code>Context</code> created
+by the URL context factory, denoting, by definition, a <code>Context</code> with
+very specific semantics.  One of its specific semantics is very
+interesting to configuration systems, because it disambiguates
+component namespaces.  That is, if an EJB refers to a <code>Frood</code> stored
+under the name <code>hoopy</code>, and another EJB refers to a <code>Towel</code> stored
+under the name <code>hoopy</code>, no conflict can occur, so long as <code>hoopy</code> is
+relative to <code>java:comp/env</code> in both cases.</p>
+<p>No Java-centric configuration framework that I&rsquo;m aware of other than
+JNDI addresses this extremely important concern.</p>
+<h2 id="putting-it-all-together">Putting It All Together</h2>
+<p>So backing up to the conceptual level, JNDI provides the ability for
+two names to be used by two different components developed in
+isolation to refer to two different things, with at least the
+<em>possibility</em> that a name clash will not occur (one component&rsquo;s
+<code>java:comp/env</code> <code>Context</code> is not the same <code>Context</code> as another
+component&rsquo;s <code>java:comp/env</code> <code>Context</code>).</p>
+<p>In addition, it allows for user-supplied factories to handle
+individual name resolution operations.  There is a defined search
+order for discovering such factories.  You supply a name, the system
+searches until it finds something that can make <code>Object</code>s for that
+name.</p>
+<p>JNDI properly separates the lookup use cases (ask for an <code>Object</code> of a
+particular type by name; receive it) from the binding and
+administration use cases (install an <code>ObjectFactory</code> that knows how to
+make an <code>Object</code> of a particular type; bind that <code>ObjectFactory</code> to a
+particular name), to such a degree that there could have been two
+specifications instead of one.</p>
+<p>Operations such as conversion and object binding are deliberately left
+unspecified, as it should be.  That is, any given <code>ObjectFactory</code> may
+do whatever it wishes to come up with an <code>Object</code> for a given name
+resolution request.</p>
+<p>At an abstract level, a compound name is a typed path, whose
+intermediate nodes may have known types as well.</p>
+<p>If we strip some of the terminology and API cruft away we can say the
+following:</p>
+<ul>
+<li>In JNDI and configuration systems, there is some kind of root object
+to which notional paths are relative.
+<ul>
+<li>In JNDI this is a <code>Context</code> and the rootiest of all root
+<code>Context</code>s is an <code>InitialContext</code>, as the name accurately
+reflects.</li>
+</ul>
+</li>
+<li>In JNDI and configuration systems, you locate an <code>Object</code> by
+supplying that root object with a typed path that designates the
+<code>Object</code> to retrieve.
+<ul>
+<li>In JNDI this is a <code>CompoundName</code> supplied to the
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/Context.html#lookup(javax.naming.Name)"><code>Context::lookup</code></a>
+method, and if you need to figure out what the type is, you can
+invoke any of several crufty methods to find the relevant
+<code>Class</code>.</li>
+</ul>
+</li>
+<li>In JNDI and configuration systems, some accessory piece of
+technology that is registered under that typed path is actually
+responsible for making the requested <code>Object</code> come into existence.
+<ul>
+<li>In JNDI, this is an <code>ObjectFactory</code> invoked by way of the
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/spi/NamingManager.html#getObjectInstance(java.lang.Object,javax.naming.Name,javax.naming.Context,java.util.Hashtable)"><code>NamingManager::getObjectInstance</code></a>
+method.</li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+  
+<footer class='entry-footer'>
+  <div class='container sep-before'><div class='tags'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M20.59,13.41l-7.17,7.17a2,2,0,0,1-2.83,0L2,12V2H12l8.59,8.59A2,2,0,0,1,20.59,13.41Z" />
+<line x1="7" y1="7" x2="7" y2="7" />
+</svg>
+<span class='screen-reader-text'>Tags: </span><a class='tag' href='/tags/java/'>java</a>, <a class='tag' href='/tags/jndi/'>jndi</a>, <a class='tag' href='/tags/config/'>config</a></div>
+
+  </div>
+</footer>
+
+
+</article>
+
+<nav class='entry-nav'>
+  <div class='container'><div class='prev-entry sep-before'>
+      <a href='/blog/welcome/'>
+        <span aria-hidden='true'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="20" y1="12" x2="4" y2="12" />
+<polyline points="10 18 4 12 10 6" />
+</svg>
+ Previous</span>
+        <span class='screen-reader-text'>Previous post: </span>Welcome</a>
+    </div></div>
+</nav>
+
+
+
+
+      </main>
+
+      <footer id='footer' class='footer'>
+        <div class='container sep-before'><section class='widget widget-social_menu sep-after'><nav aria-label='Social Menu'>
+    <ul><li>
+        <a href='https://github.com/ljnelson' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Github account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+</svg>
+</a>
+      </li><li>
+        <a href='https://linkedin.com/in/ljnelson' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Linkedin account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+<rect x="2" y="9" width="4" height="12" />
+<circle cx="4" cy="4" r="2" />
+</svg>
+</a>
+      </li></ul>
+  </nav>
+</section><div class='copyright'>
+  <p> &copy; 2021 Laird Nelson </p>
+</div>
+
+        </div>
+      </footer>
+
+    </div>
+  </div><script>window.__assets_js_src="/assets/js/"</script>
+
+<script src='/assets/js/main.c3bcf2df.js'></script><script src='/js/custom.js'></script>
+
+</body>
+
+</html>
+
