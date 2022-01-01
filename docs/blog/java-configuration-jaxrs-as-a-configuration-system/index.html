@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang='en' dir='auto'><head>
+  <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='description' content='Table Of Contents  Background and Rationale Jakarta REST as a Configuration System?! The Foundation Configuration Concerns Disambiguation Suitability Conclusion    Background and Rationale I&rsquo;ve written previously about looking at JNDI through a Java-centric configuration system design lens. Here I&rsquo;ll do something similar with the JAX-RS specification (now known as {deep breath} Jakarta RESTful Web Services, or, hopefully soon, simply Jakarta REST, which is how I&rsquo;ll refer to it in this article).'>
+<meta name='theme-color' content='#001dc0'>
+
+<meta property='og:title' content='Java Configuration: JAX-RS as a Configuration System • Blame Laird'>
+<meta property='og:description' content='Table Of Contents  Background and Rationale Jakarta REST as a Configuration System?! The Foundation Configuration Concerns Disambiguation Suitability Conclusion    Background and Rationale I&rsquo;ve written previously about looking at JNDI through a Java-centric configuration system design lens. Here I&rsquo;ll do something similar with the JAX-RS specification (now known as {deep breath} Jakarta RESTful Web Services, or, hopefully soon, simply Jakarta REST, which is how I&rsquo;ll refer to it in this article).'>
+<meta property='og:url' content='https://ljnelson.github.io/blog/java-configuration-jaxrs-as-a-configuration-system/'>
+<meta property='og:site_name' content='Blame Laird'>
+<meta property='og:type' content='article'><meta property='article:section' content='blog'><meta property='article:tag' content='java'><meta property='article:tag' content='jaxrs'><meta property='article:tag' content='config'><meta property='article:published_time' content='2022-01-01T12:45:33-08:00'/><meta property='article:modified_time' content='2022-01-01T12:45:33-08:00'/><meta name='twitter:card' content='summary'>
+
+<meta name="generator" content="Hugo 0.91.2" />
+
+  <title>Java Configuration: JAX-RS as a Configuration System • Blame Laird</title>
+  <link rel='canonical' href='https://ljnelson.github.io/blog/java-configuration-jaxrs-as-a-configuration-system/'>
+  
+  
+  <link rel='icon' href='/images/dougflag.svg'>
+<link rel='stylesheet' href='/assets/css/main.ab98e12b.css'><link rel='stylesheet' href='/css/custom.css'><style>
+:root{--color-accent:#001dc0;}
+</style>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPDL2GWEZY"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-VPDL2GWEZY', { 'anonymize_ip': false });
+}
+</script>
+
+  
+
+</head>
+<body class='page type-blog has-sidebar'>
+
+  <div class='site'><div id='sidebar' class='sidebar'>
+  <a class='screen-reader-text' href='#main-menu'>Skip to Main Menu</a>
+
+  <div class='container'><section class='widget widget-about sep-after'>
+  <header>
+    
+    <div class='logo'>
+      <a href='/'>
+        <img src='/images/dougflag.png'>
+      </a>
+    </div>
+    
+    <h2 class='title site-title '>
+      <a href='/'>
+      Blame Laird
+      </a>
+    </h2>
+    <div class='desc'>
+    Sum Ergo Mea Culpa Est
+    </div>
+  </header>
+
+</section>
+<section class='widget widget-search sep-after'>
+  <header>
+    <h4 class='title widget-title'>Search</h4>
+  </header>
+
+  <form action='/search' id='search-form' class='search-form'>
+    <label>
+      <span class='screen-reader-text'>Search</span>
+      <input id='search-term' class='search-term' type='search' name='q' placeholder='Search&hellip;'>
+    </label></form>
+
+</section>
+<section class='widget widget-taxonomy_cloud sep-after'>
+  <header>
+    <h4 class='title widget-title'>Tags</h4>
+  </header>
+
+  <div class='container list-container'>
+  <ul class='list taxonomy-cloud'><li>
+        <a href='/tags/config/' style='font-size:2em'>config</a>
+      </li><li>
+        <a href='/tags/java/' style='font-size:2em'>java</a>
+      </li><li>
+        <a href='/tags/jaxrs/' style='font-size:1em'>jaxrs</a>
+      </li><li>
+        <a href='/tags/jndi/' style='font-size:1em'>jndi</a>
+      </li><li>
+        <a href='/tags/personal/' style='font-size:1em'>personal</a>
+      </li></ul>
+</div>
+
+
+</section>
+</div>
+
+  <div class='sidebar-overlay'></div>
+</div><div class='main'><nav id='main-menu' class='menu main-menu' aria-label='Main Menu'>
+  <div class='container'>
+    <a class='screen-reader-text' href='#content'>Skip to Content</a>
+
+<button id='sidebar-toggler' class='sidebar-toggler' aria-controls='sidebar'>
+  <span class='screen-reader-text'>Toggle Sidebar</span>
+  <span class='open'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="3" y1="12" x2="21" y2="12" />
+<line x1="3" y1="6" x2="21" y2="6" />
+<line x1="3" y1="18" x2="21" y2="18" />
+</svg>
+</span>
+  <span class='close'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="18" y1="6" x2="6" y2="18" />
+<line x1="6" y1="6" x2="18" y2="18" />
+</svg>
+</span>
+</button>
+    <ul><li class='item'>
+        <a href='/'>Home</a>
+      </li><li class='item'>
+        <a href='https://about.me/lairdnelson'>About</a>
+      </li><li class='item current'>
+        <a aria-current='page' href='/blog/'>Blog</a>
+      </li></ul>
+  </div>
+</nav><div class='header-widgets'>
+        <div class='container'>
+    
+    <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
+  <section class='widget widget-breadcrumbs sep-after'>
+    <nav id='breadcrumbs'>
+      <ol><li><a href='/'>Home</a></li><li><a href='/blog/'>Blog</a></li><li><span>Java Configuration: JAX-RS as a Configuration System</span></li></ol>
+    </nav>
+  </section></div>
+      </div>
+
+      <header id='header' class='header site-header'>
+        <div class='container sep-after'>
+          <div class='header-info'><p class='site-title title'>Blame Laird</p><p class='desc site-desc'>Sum Ergo Mea Culpa Est</p>
+          </div>
+        </div>
+      </header>
+
+      <main id='content'>
+
+
+<article lang='en' class='entry'>
+  <header class='header entry-header'>
+  <div class='container sep-after'>
+    <div class='header-info'>
+      <h1 class='title'>Java Configuration: JAX-RS as a Configuration System</h1>
+      
+
+    </div>
+    <div class='entry-meta'>
+  <span class='posted-on'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+<line x1="16" y1="2" x2="16" y2="6" />
+<line x1="8" y1="2" x2="8" y2="6" />
+<line x1="3" y1="10" x2="21" y2="10" />
+</svg>
+<span class='screen-reader-text'>Posted on </span>
+  <time class='entry-date' datetime='2022-01-01T12:45:33-08:00'>2022-01-01</time>
+</span>
+
+  
+  
+<span class='reading-time'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><circle cx="12" cy="12" r="10" />
+<polyline points="12 6 12 12 15 15" />
+</svg>
+6 mins read
+</span>
+
+
+</div>
+
+
+  </div>
+</header>
+
+  
+  
+
+  <div class='container entry-content'>
+  <div>
+  <h2 id="table-of-contents">Table Of Contents</h2>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#background-and-rationale">Background and Rationale</a></li>
+    <li><a href="#jakarta-rest-as-a-configuration-system">Jakarta REST as a Configuration System?!</a></li>
+    <li><a href="#the-foundation">The Foundation</a></li>
+    <li><a href="#configuration-concerns">Configuration Concerns</a></li>
+    <li><a href="#disambiguation">Disambiguation</a></li>
+    <li><a href="#suitability">Suitability</a></li>
+    <li><a href="#conclusion">Conclusion</a></li>
+  </ul>
+</nav>
+</div>
+
+<h2 id="background-and-rationale">Background and Rationale</h2>
+<p>I&rsquo;ve <a href="/blog/java-configuration-jndi-and-naming-operations/">written previously</a> about looking at
+JNDI through a Java-centric configuration system design lens.  Here
+I&rsquo;ll do something similar with the JAX-RS specification (now known as
+{deep breath} <a href="https://jakarta.ee/specifications/restful-ws/3.0/">Jakarta RESTful Web
+Services</a>, or,
+hopefully soon, simply Jakarta REST, which is how I&rsquo;ll refer to it in
+this article).</p>
+<h2 id="jakarta-rest-as-a-configuration-system">Jakarta REST as a Configuration System?!</h2>
+<p>Hear me out.</p>
+<p>First, I&rsquo;m not <em>actually</em> proposing that if you want a configuration
+framework in your Java program you should grab a Jakarta REST
+implementation and go to town.</p>
+<p>But I <em>am</em> looking at it as primarily a <em>Java</em> framework, and not as
+something that is web-oriented.  After all, one of its founding goals
+was to make it easy to use plain old Java objects (POJOs) to model
+representational state transfers.  Who really cares if there is a
+network involved or not?</p>
+<h2 id="the-foundation">The Foundation</h2>
+<p>Jakarta REST is built atop <em>resource classes</em>.  While you should of
+course consult <a href="https://jakarta.ee/specifications/restful-ws/3.0/jakarta-restful-ws-spec-3.0.html#resource-classes">the
+specification</a>
+for the official definition of resource classes (and anything else I&rsquo;m
+going to wave my hands about in this article), the general gist is: a
+resource class is a POJO class with some specifically shaped methods
+in it, and annotated in a particular way.</p>
+<p>For retrieval purposes (<code>GET</code>), which is all I&rsquo;m interested in,
+methods that do retrievals obviously need to have a return type.  The
+return type can be Jakarta-REST-specific
+(<a href="https://jakarta.ee/specifications/restful-ws/3.0/apidocs/jakarta/ws/rs/core/response"><code>Response</code></a>),
+or can be a POJO designed by the resource class designer.</p>
+<p>The annotations on resource classes and their methods help them
+declare what <em>paths</em> they respond to, and what types of objects those
+methods supply in response.</p>
+<p>When you put this all together, you have a subsystem that receives a
+typed path, finds a relevant supplier (a resource method), caches that
+fact, and then uses that supplier to serve up an <code>Object</code> of some kind
+that corresponds to that path (and other qualifiers).</p>
+<h2 id="configuration-concerns">Configuration Concerns</h2>
+<p>When you look at Jakarta REST this way, it starts to look an awful lot
+like <a href="/blog/java-configuration-jndi-and-naming-operations/">some of the JNDI concepts I&rsquo;ve written about previously</a>.</p>
+<p>In both cases there is a lookup operation, with name-like structures
+identifying the thing to retrieve.  In both cases (although in JNDI
+it&rsquo;s a pain in the neck) you can qualify your lookup.  In both cases
+an <em>application assembler</em> can declare explicitly how bundles of
+components should be combined into an application in such a way that
+naming conflicts do not occur.  In both cases, <em>how</em> a resulting
+<code>Object</code> is put together, or found, or synthesized, is completely
+transparent to the caller and is deliberately unspecified.</p>
+<p>Jakarta REST also features a wealth of additional qualifiers that ride
+along with every request.  You have the path, of course, but you also
+have headers (key/value pairs), MIME types, and request-level content
+negotiation strategies.  If you look at these coarsely enough, they&rsquo;re
+just qualifiers further picking out the <code>Object</code> that is being
+requested.</p>
+<p>One of the nice things about the lookup request format that Jakarta
+REST uses is that in a <code>path/with/many/components</code> there is no
+presumption that each component in the path designates a retrievable
+resource.  (JNDI, by contrast, basically requires that a <code>Context</code>
+exist at each juncture.)  This allows for sparse graphs of resources,
+dynamic subresources, and all sorts of other interesting bits that end
+up being directly relevant to configuration systems.</p>
+<p>Another nice thing about the lookup request format is that the
+incoming name-like structure (the request) consists not just of the
+name-like thing (the path) plus its qualifiers (the headers and matrix
+parameters and everything else) but also the <em>type</em> of the object
+being requested (expressed as a MIME type).  In my <a href="/blog/java-configuration-jndi-and-naming-operations/">earlier JNDI
+article</a>, I noted that configuration systems involve a <em>typed path</em> at the
+heart of configuration lookup.  JNDI sort of lets you get there, but
+it is awful and clunky to do.  Jakarta REST makes it reasonably easy:
+by the time a resource method gets invoked, you know that MIME type
+matching has already occurred according to a well-specified algorithm,
+so you know that the resource method in question is equipped to
+service the request.</p>
+<h2 id="disambiguation">Disambiguation</h2>
+<p>Thankfully, the designers of Jakarta REST (well, JAX-RS, in this case)
+also realized the namespace issues that always show up when you talk
+about someone assembling components together into an application, and
+provided for their solution.</p>
+<p>In JNDI, namespace issues are somewhat moot, because names are always
+relative to a <code>Context</code>: there&rsquo;s no such thing as an absolute name.
+The same is not true in Jakarta REST, but the application assembler
+can explicitly designate an <code>Application</code> implementation that says for
+certain which Java classes are to be considered resource classes, and
+which are not.  This allows two resource methods, for example, from
+two different sources, annotated with the same <code>@Path</code> annotation, to
+coexist: the application assembler can choose just one, can wrap the
+other, or any of a variety of other strategies at assembly time to
+resolve the ambiguity.</p>
+<p>(It&rsquo;s worth noting that no Java-centric configuration system that I&rsquo;m
+aware of lets you do this fundamental disambiguation operation at
+assembly time.  That&rsquo;s really odd.)</p>
+<h2 id="suitability">Suitability</h2>
+<p>Probably the most interesting feature of Jakarta REST when looked at
+through a Java-centric configuration lens is its built-in notion of
+suitability.</p>
+<p>A resource method is more or less suitable for a given request as
+specified by an <a href="https://jakarta.ee/specifications/restful-ws/3.0/jakarta-restful-ws-spec-3.0.html#mapping_requests_to_java_methods">exceedingly well-defined
+algorithm</a>.
+For my purposes, the exact steps of the algorithm are unimportant.
+The fact that it exists and is defined in terms of <em>application-level</em>
+concerns, rather than <em>component-level</em> concerns is what is important.
+If this algorithm completes and there are somehow still two or more
+candidate resource methods for a given request, then an error is
+thrown.  This means that resource method selection is <em>deterministic</em>:
+if you supply the same inputs, you get the same outputs every time.</p>
+<p>Recognizing the difference between application-level concerns and
+component-level concerns is critical for this kind of determinism,
+because components are often developed in isolation from one another,
+so sharing things like namespaces and numberspaces and pathspaces and
+all the rest can be difficult.  So, for example, defining the matching
+algorithm in terms of a global set of MIME types means that there can
+be no name clashes between types: <code>application/octet-stream</code> means
+what it means, regardless of which component uses it.</p>
+<p>Contrast this with another popular but extraordinarily misguided
+strategy of labeling some component somewhere with a numeric priority
+and believing erroneously that you have somehow solved the ambiguity
+problem.  Instead, you&rsquo;ve just punted it: If component <em>A</em> and
+component <em>B</em> are developed in isolation, and both have independently
+decided to declare that they are of priority <code>10</code>, that is still a
+problem the application assembler has to solve, but unless there is
+yet <em>another</em> mechanism for her to disambiguiate <em>this</em> ambiguity, it
+can lead to a non-deterministic state of affairs.  We see this, <a href="https://lairdnelson.wordpress.com/2021/10/14/some-of-the-things-i-dont-like-about-microprofile-config/">as
+I&rsquo;ve noted earlier, in MicroProfile
+Config</a>.
+(Interestingly, Jakarta REST <a href="https://jakarta.ee/specifications/restful-ws/3.0/jakarta-restful-ws-spec-3.0.html#provider_priorities"><em>did</em> walk into this trap in terms of
+providers</a>
+and other accessory entities, but at least they give the application
+assembler a welcome &ldquo;out&rdquo; since she can always write an <code>Application</code>
+class to make things more explicit.)</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>Jakarta REST is a specification for web services, yes, but it is also
+a specification for acquiring Java <code>Object</code>s given path-like requests,
+where the potential suppliers of such <code>Object</code>s can be more or less
+suitable for any given request.  This lines up pretty well with the
+requirements of a Java-centric configuration system.  There are
+lessons to be learned here that can be applied to the design of a
+&ldquo;real&rdquo; Java-centric configuration system.</p>
+
+</div>
+
+  
+<footer class='entry-footer'>
+  <div class='container sep-before'><div class='tags'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M20.59,13.41l-7.17,7.17a2,2,0,0,1-2.83,0L2,12V2H12l8.59,8.59A2,2,0,0,1,20.59,13.41Z" />
+<line x1="7" y1="7" x2="7" y2="7" />
+</svg>
+<span class='screen-reader-text'>Tags: </span><a class='tag' href='/tags/java/'>java</a>, <a class='tag' href='/tags/jaxrs/'>jaxrs</a>, <a class='tag' href='/tags/config/'>config</a></div>
+
+  </div>
+</footer>
+
+
+</article>
+
+<nav class='entry-nav'>
+  <div class='container'><div class='prev-entry sep-before'>
+      <a href='/blog/java-configuration-jndi-and-naming-operations/'>
+        <span aria-hidden='true'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="20" y1="12" x2="4" y2="12" />
+<polyline points="10 18 4 12 10 6" />
+</svg>
+ Previous</span>
+        <span class='screen-reader-text'>Previous post: </span>Java Configuration: JNDI and Naming Operations</a>
+    </div></div>
+</nav>
+
+
+
+
+      </main>
+
+      <footer id='footer' class='footer'>
+        <div class='container sep-before'><section class='widget widget-social_menu sep-after'><nav aria-label='Social Menu'>
+    <ul><li>
+        <a href='https://github.com/ljnelson' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Github account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+</svg>
+</a>
+      </li><li>
+        <a href='https://linkedin.com/in/ljnelson' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Linkedin account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+<rect x="2" y="9" width="4" height="12" />
+<circle cx="4" cy="4" r="2" />
+</svg>
+</a>
+      </li></ul>
+  </nav>
+</section><div class='copyright'>
+  <p> &copy; 2021-2022 Laird Nelson </p>
+</div>
+
+        </div>
+      </footer>
+
+    </div>
+  </div><script>window.__assets_js_src="/assets/js/"</script>
+
+<script src='/assets/js/main.c3bcf2df.js'></script><script src='/js/custom.js'></script>
+
+</body>
+
+</html>
+

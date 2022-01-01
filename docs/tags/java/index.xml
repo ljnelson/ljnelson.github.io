@@ -5,7 +5,16 @@
     <link>https://ljnelson.github.io/tags/java/</link>
     <description>Recent content in java on Blame Laird</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Thu, 30 Dec 2021 16:22:37 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/tags/java/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 01 Jan 2022 12:45:33 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/tags/java/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Java Configuration: JAX-RS as a Configuration System</title>
+      <link>https://ljnelson.github.io/blog/java-configuration-jaxrs-as-a-configuration-system/</link>
+      <pubDate>Sat, 01 Jan 2022 12:45:33 -0800</pubDate>
+      
+      <guid>https://ljnelson.github.io/blog/java-configuration-jaxrs-as-a-configuration-system/</guid>
+      <description>Table Of Contents  Background and Rationale Jakarta REST as a Configuration System?! The Foundation Configuration Concerns Disambiguation Suitability Conclusion    Background and Rationale I&amp;rsquo;ve written previously about looking at JNDI through a Java-centric configuration system design lens. Here I&amp;rsquo;ll do something similar with the JAX-RS specification (now known as {deep breath} Jakarta RESTful Web Services, or, hopefully soon, simply Jakarta REST, which is how I&amp;rsquo;ll refer to it in this article).</description>
+    </item>
+    
     <item>
       <title>Java Configuration: JNDI and Naming Operations</title>
       <link>https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/</link>

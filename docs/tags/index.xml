@@ -5,11 +5,11 @@
     <link>https://ljnelson.github.io/tags/</link>
     <description>Recent content in Tags on Blame Laird</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Thu, 30 Dec 2021 16:22:37 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 01 Jan 2022 12:45:33 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>config</title>
       <link>https://ljnelson.github.io/tags/config/</link>
-      <pubDate>Thu, 30 Dec 2021 16:22:37 -0800</pubDate>
+      <pubDate>Sat, 01 Jan 2022 12:45:33 -0800</pubDate>
       
       <guid>https://ljnelson.github.io/tags/config/</guid>
       <description></description>
@@ -18,9 +18,18 @@
     <item>
       <title>java</title>
       <link>https://ljnelson.github.io/tags/java/</link>
-      <pubDate>Thu, 30 Dec 2021 16:22:37 -0800</pubDate>
+      <pubDate>Sat, 01 Jan 2022 12:45:33 -0800</pubDate>
       
       <guid>https://ljnelson.github.io/tags/java/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>jaxrs</title>
+      <link>https://ljnelson.github.io/tags/jaxrs/</link>
+      <pubDate>Sat, 01 Jan 2022 12:45:33 -0800</pubDate>
+      
+      <guid>https://ljnelson.github.io/tags/jaxrs/</guid>
       <description></description>
     </item>
     
