@@ -96,12 +96,12 @@ titleSeparator = "•"
 #facebook = "MunifTanjim"
 github = "ljnelson"
 #gitlab = "MunifTanjim"
-#instagram = "MunifTanjim"
+instagram = "chuggid"
 linkedin = "ljnelson"
 #twitter = "MunifTanjim"
 #telegram = "MunifTanjim"
 #google_scholar = "qc6CJjYAAAAJ"
-#youtube = "UCT-U0rNerYxItGcuoPX-WYA"
+youtube = "UCBUnNk5vMOw9D7EGwT8wfQQ"
 
 [params.comments]
 enable = false
