@@ -5,12 +5,14 @@
     <link>https://ljnelson.github.io/tags/java/</link>
     <description>Recent content in java on Blame Laird</description>
     <generator>Hugo -- gohugo.io</generator>
+    <managingEditor>ljnelson@gmail.com (Laird Nelson)</managingEditor>
+    <webMaster>ljnelson@gmail.com (Laird Nelson)</webMaster>
     <lastBuildDate>Sat, 01 Jan 2022 12:45:33 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/tags/java/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Java Configuration: JAX-RS as a Configuration System</title>
       <link>https://ljnelson.github.io/blog/java-configuration-jaxrs-as-a-configuration-system/</link>
       <pubDate>Sat, 01 Jan 2022 12:45:33 -0800</pubDate>
-      
+      <author>ljnelson@gmail.com (Laird Nelson)</author>
       <guid>https://ljnelson.github.io/blog/java-configuration-jaxrs-as-a-configuration-system/</guid>
       <description>Table Of Contents  Background and Rationale Jakarta REST as a Configuration System?! The Foundation Configuration Concerns Disambiguation Suitability Conclusion    Background and Rationale I&amp;rsquo;ve written previously about looking at JNDI through a Java-centric configuration system design lens. Here I&amp;rsquo;ll do something similar with the JAX-RS specification (now known as {deep breath} Jakarta RESTful Web Services, or, hopefully soon, simply Jakarta REST, which is how I&amp;rsquo;ll refer to it in this article).</description>
     </item>
@@ -19,7 +21,7 @@
       <title>Java Configuration: JNDI and Naming Operations</title>
       <link>https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/</link>
       <pubDate>Thu, 30 Dec 2021 16:22:37 -0800</pubDate>
-      
+      <author>ljnelson@gmail.com (Laird Nelson)</author>
       <guid>https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/</guid>
       <description>Table Of Contents  Background and Rationale What&amp;rsquo;s In A (Naming Service) Name?  The Object Management Group Naming Service Specification   JNDI  Bootstrapping Retrieval Operations Binding Operations Name-to-Object Bindings Synthesizing Operations  ObjectFactory   Event Operations   Putting It All Together JNDI Flaws  No Generics Binding and Lookup Services Colocated Vague Qualifiers Too Many Checked Exceptions Can&amp;rsquo;t Use Class or Type as a Selector Strange Service Provider Location Machinery Too Much Hierarchy   Conclusion What&amp;rsquo;s Next    Background and Rationale I&amp;rsquo;ve written previously about how Java configuration systems, boiled down to their essence, are simply systems for loading Java objects that are described in a particular way, usually by some kind of name (along with qualifiers), and that such systems have absolutely nothing to do with dependency injection or object binding or all the rest of the shiny but irrelevant things people like to get excited about in this space.</description>
     </item>

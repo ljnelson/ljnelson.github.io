@@ -5,12 +5,14 @@
     <link>https://ljnelson.github.io/tags/jaxrs/</link>
     <description>Recent content in jaxrs on Blame Laird</description>
     <generator>Hugo -- gohugo.io</generator>
+    <managingEditor>ljnelson@gmail.com (Laird Nelson)</managingEditor>
+    <webMaster>ljnelson@gmail.com (Laird Nelson)</webMaster>
     <lastBuildDate>Sat, 01 Jan 2022 12:45:33 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/tags/jaxrs/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Java Configuration: JAX-RS as a Configuration System</title>
       <link>https://ljnelson.github.io/blog/java-configuration-jaxrs-as-a-configuration-system/</link>
       <pubDate>Sat, 01 Jan 2022 12:45:33 -0800</pubDate>
-      
+      <author>ljnelson@gmail.com (Laird Nelson)</author>
       <guid>https://ljnelson.github.io/blog/java-configuration-jaxrs-as-a-configuration-system/</guid>
       <description>Table Of Contents  Background and Rationale Jakarta REST as a Configuration System?! The Foundation Configuration Concerns Disambiguation Suitability Conclusion    Background and Rationale I&amp;rsquo;ve written previously about looking at JNDI through a Java-centric configuration system design lens. Here I&amp;rsquo;ll do something similar with the JAX-RS specification (now known as {deep breath} Jakarta RESTful Web Services, or, hopefully soon, simply Jakarta REST, which is how I&amp;rsquo;ll refer to it in this article).</description>
     </item>

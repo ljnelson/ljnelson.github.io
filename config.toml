@@ -1,7 +1,7 @@
 baseURL = "https://ljnelson.github.io/"
 
 title = "Blame Laird"
-
+rssLimit = 20
 # for smart copyright line, leave this blank and check [params.copyright]
 copyright = ""
 
@@ -24,6 +24,10 @@ enableEmoji = true
 
 # Missing translations will default to this content language
 defaultContentLanguage = "en"
+
+[author]
+name = "Laird Nelson"
+email = "ljnelson@gmail.com"
 
 [markup.highlight]
 lineNos = true
