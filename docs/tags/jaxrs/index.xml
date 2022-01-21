@@ -14,7 +14,160 @@
       <pubDate>Sat, 01 Jan 2022 12:45:33 -0800</pubDate>
       <author>ljnelson@gmail.com (Laird Nelson)</author>
       <guid>https://ljnelson.github.io/blog/java-configuration-jaxrs-as-a-configuration-system/</guid>
-      <description>Table Of Contents  Background and Rationale Jakarta REST as a Configuration System?! The Foundation Configuration Concerns Disambiguation Suitability Conclusion    Background and Rationale I&amp;rsquo;ve written previously about looking at JNDI through a Java-centric configuration system design lens. Here I&amp;rsquo;ll do something similar with the JAX-RS specification (now known as {deep breath} Jakarta RESTful Web Services, or, hopefully soon, simply Jakarta REST, which is how I&amp;rsquo;ll refer to it in this article).</description>
+      <description>&lt;div&gt;
+  &lt;h2 id=&#34;table-of-contents&#34;&gt;Table Of Contents&lt;/h2&gt;
+  &lt;nav id=&#34;TableOfContents&#34;&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href=&#34;#background-and-rationale&#34;&gt;Background and Rationale&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#jakarta-rest-as-a-configuration-system&#34;&gt;Jakarta REST as a Configuration System?!&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#the-foundation&#34;&gt;The Foundation&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#configuration-concerns&#34;&gt;Configuration Concerns&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#disambiguation&#34;&gt;Disambiguation&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#suitability&#34;&gt;Suitability&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#conclusion&#34;&gt;Conclusion&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&#34;background-and-rationale&#34;&gt;Background and Rationale&lt;/h2&gt;
+&lt;p&gt;I&amp;rsquo;ve &lt;a href=&#34;https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/&#34;&gt;written previously&lt;/a&gt; about looking at
+JNDI through a Java-centric configuration system design lens.  Here
+I&amp;rsquo;ll do something similar with the JAX-RS specification (now known as
+{deep breath} &lt;a href=&#34;https://jakarta.ee/specifications/restful-ws/3.0/&#34;&gt;Jakarta RESTful Web
+Services&lt;/a&gt;, or,
+hopefully soon, simply Jakarta REST, which is how I&amp;rsquo;ll refer to it in
+this article).&lt;/p&gt;
+&lt;h2 id=&#34;jakarta-rest-as-a-configuration-system&#34;&gt;Jakarta REST as a Configuration System?!&lt;/h2&gt;
+&lt;p&gt;Hear me out.&lt;/p&gt;
+&lt;p&gt;First, I&amp;rsquo;m not &lt;em&gt;actually&lt;/em&gt; proposing that if you want a configuration
+framework in your Java program you should grab a Jakarta REST
+implementation and go to town.&lt;/p&gt;
+&lt;p&gt;But I &lt;em&gt;am&lt;/em&gt; looking at it as primarily a &lt;em&gt;Java&lt;/em&gt; framework, and not as
+something that is web-oriented.  After all, one of its founding goals
+was to make it easy to use plain old Java objects (POJOs) to model
+representational state transfers.  Who really cares if there is a
+network involved or not?&lt;/p&gt;
+&lt;h2 id=&#34;the-foundation&#34;&gt;The Foundation&lt;/h2&gt;
+&lt;p&gt;Jakarta REST is built atop &lt;em&gt;resource classes&lt;/em&gt;.  While you should of
+course consult &lt;a href=&#34;https://jakarta.ee/specifications/restful-ws/3.0/jakarta-restful-ws-spec-3.0.html#resource-classes&#34;&gt;the
+specification&lt;/a&gt;
+for the official definition of resource classes (and anything else I&amp;rsquo;m
+going to wave my hands about in this article), the general gist is: a
+resource class is a POJO class with some specifically shaped methods
+in it, and annotated in a particular way.&lt;/p&gt;
+&lt;p&gt;For retrieval purposes (&lt;code&gt;GET&lt;/code&gt;), which is all I&amp;rsquo;m interested in,
+methods that do retrievals obviously need to have a return type.  The
+return type can be Jakarta-REST-specific
+(&lt;a href=&#34;https://jakarta.ee/specifications/restful-ws/3.0/apidocs/jakarta/ws/rs/core/response&#34;&gt;&lt;code&gt;Response&lt;/code&gt;&lt;/a&gt;),
+or can be a POJO designed by the resource class designer.&lt;/p&gt;
+&lt;p&gt;The annotations on resource classes and their methods help them
+declare what &lt;em&gt;paths&lt;/em&gt; they respond to, and what types of objects those
+methods supply in response.&lt;/p&gt;
+&lt;p&gt;When you put this all together, you have a subsystem that receives a
+typed path, finds a relevant supplier (a resource method), caches that
+fact, and then uses that supplier to serve up an &lt;code&gt;Object&lt;/code&gt; of some kind
+that corresponds to that path (and other qualifiers).&lt;/p&gt;
+&lt;h2 id=&#34;configuration-concerns&#34;&gt;Configuration Concerns&lt;/h2&gt;
+&lt;p&gt;When you look at Jakarta REST this way, it starts to look an awful lot
+like &lt;a href=&#34;https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/&#34;&gt;some of the JNDI concepts I&amp;rsquo;ve written about previously&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;In both cases there is a lookup operation, with name-like structures
+identifying the thing to retrieve.  In both cases (although in JNDI
+it&amp;rsquo;s a pain in the neck) you can qualify your lookup.  In both cases
+an &lt;em&gt;application assembler&lt;/em&gt; can declare explicitly how bundles of
+components should be combined into an application in such a way that
+naming conflicts do not occur.  In both cases, &lt;em&gt;how&lt;/em&gt; a resulting
+&lt;code&gt;Object&lt;/code&gt; is put together, or found, or synthesized, is completely
+transparent to the caller and is deliberately unspecified.&lt;/p&gt;
+&lt;p&gt;Jakarta REST also features a wealth of additional qualifiers that ride
+along with every request.  You have the path, of course, but you also
+have headers (key/value pairs), MIME types, and request-level content
+negotiation strategies.  If you look at these coarsely enough, they&amp;rsquo;re
+just qualifiers further picking out the &lt;code&gt;Object&lt;/code&gt; that is being
+requested.&lt;/p&gt;
+&lt;p&gt;One of the nice things about the lookup request format that Jakarta
+REST uses is that in a &lt;code&gt;path/with/many/components&lt;/code&gt; there is no
+presumption that each component in the path designates a retrievable
+resource.  (JNDI, by contrast, basically requires that a &lt;code&gt;Context&lt;/code&gt;
+exist at each juncture.)  This allows for sparse graphs of resources,
+dynamic subresources, and all sorts of other interesting bits that end
+up being directly relevant to configuration systems.&lt;/p&gt;
+&lt;p&gt;Another nice thing about the lookup request format is that the
+incoming name-like structure (the request) consists not just of the
+name-like thing (the path) plus its qualifiers (the headers and matrix
+parameters and everything else) but also the &lt;em&gt;type&lt;/em&gt; of the object
+being requested (expressed as a MIME type).  In my &lt;a href=&#34;https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/&#34;&gt;earlier JNDI
+article&lt;/a&gt;, I noted that configuration systems involve a &lt;em&gt;typed path&lt;/em&gt; at the
+heart of configuration lookup.  JNDI sort of lets you get there, but
+it is awful and clunky to do.  Jakarta REST makes it reasonably easy:
+by the time a resource method gets invoked, you know that MIME type
+matching has already occurred according to a well-specified algorithm,
+so you know that the resource method in question is equipped to
+service the request.&lt;/p&gt;
+&lt;h2 id=&#34;disambiguation&#34;&gt;Disambiguation&lt;/h2&gt;
+&lt;p&gt;Thankfully, the designers of Jakarta REST (well, JAX-RS, in this case)
+also realized the namespace issues that always show up when you talk
+about someone assembling components together into an application, and
+provided for their solution.&lt;/p&gt;
+&lt;p&gt;In JNDI, namespace issues are somewhat moot, because names are always
+relative to a &lt;code&gt;Context&lt;/code&gt;: there&amp;rsquo;s no such thing as an absolute name.
+The same is not true in Jakarta REST, but the application assembler
+can explicitly designate an &lt;code&gt;Application&lt;/code&gt; implementation that says for
+certain which Java classes are to be considered resource classes, and
+which are not.  This allows two resource methods, for example, from
+two different sources, annotated with the same &lt;code&gt;@Path&lt;/code&gt; annotation, to
+coexist: the application assembler can choose just one, can wrap the
+other, or any of a variety of other strategies at assembly time to
+resolve the ambiguity.&lt;/p&gt;
+&lt;p&gt;(It&amp;rsquo;s worth noting that no Java-centric configuration system that I&amp;rsquo;m
+aware of lets you do this fundamental disambiguation operation at
+assembly time.  That&amp;rsquo;s really odd.)&lt;/p&gt;
+&lt;h2 id=&#34;suitability&#34;&gt;Suitability&lt;/h2&gt;
+&lt;p&gt;Probably the most interesting feature of Jakarta REST when looked at
+through a Java-centric configuration lens is its built-in notion of
+suitability.&lt;/p&gt;
+&lt;p&gt;A resource method is more or less suitable for a given request as
+specified by an &lt;a href=&#34;https://jakarta.ee/specifications/restful-ws/3.0/jakarta-restful-ws-spec-3.0.html#mapping_requests_to_java_methods&#34;&gt;exceedingly well-defined
+algorithm&lt;/a&gt;.
+For my purposes, the exact steps of the algorithm are unimportant.
+The fact that it exists and is defined in terms of &lt;em&gt;application-level&lt;/em&gt;
+concerns, rather than &lt;em&gt;component-level&lt;/em&gt; concerns is what is important.
+If this algorithm completes and there are somehow still two or more
+candidate resource methods for a given request, then an error is
+thrown.  This means that resource method selection is &lt;em&gt;deterministic&lt;/em&gt;:
+if you supply the same inputs, you get the same outputs every time.&lt;/p&gt;
+&lt;p&gt;Recognizing the difference between application-level concerns and
+component-level concerns is critical for this kind of determinism,
+because components are often developed in isolation from one another,
+so sharing things like namespaces and numberspaces and pathspaces and
+all the rest can be difficult.  So, for example, defining the matching
+algorithm in terms of a global set of MIME types means that there can
+be no name clashes between types: &lt;code&gt;application/octet-stream&lt;/code&gt; means
+what it means, regardless of which component uses it.&lt;/p&gt;
+&lt;p&gt;Contrast this with another popular but extraordinarily misguided
+strategy of labeling some component somewhere with a numeric priority
+and believing erroneously that you have somehow solved the ambiguity
+problem.  Instead, you&amp;rsquo;ve just punted it: If component &lt;em&gt;A&lt;/em&gt; and
+component &lt;em&gt;B&lt;/em&gt; are developed in isolation, and both have independently
+decided to declare that they are of priority &lt;code&gt;10&lt;/code&gt;, that is still a
+problem the application assembler has to solve, but unless there is
+yet &lt;em&gt;another&lt;/em&gt; mechanism for her to disambiguiate &lt;em&gt;this&lt;/em&gt; ambiguity, it
+can lead to a non-deterministic state of affairs.  We see this, &lt;a href=&#34;https://lairdnelson.wordpress.com/2021/10/14/some-of-the-things-i-dont-like-about-microprofile-config/&#34;&gt;as
+I&amp;rsquo;ve noted earlier, in MicroProfile
+Config&lt;/a&gt;.
+(Interestingly, Jakarta REST &lt;a href=&#34;https://jakarta.ee/specifications/restful-ws/3.0/jakarta-restful-ws-spec-3.0.html#provider_priorities&#34;&gt;&lt;em&gt;did&lt;/em&gt; walk into this trap in terms of
+providers&lt;/a&gt;
+and other accessory entities, but at least they give the application
+assembler a welcome &amp;ldquo;out&amp;rdquo; since she can always write an &lt;code&gt;Application&lt;/code&gt;
+class to make things more explicit.)&lt;/p&gt;
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;Jakarta REST is a specification for web services, yes, but it is also
+a specification for acquiring Java &lt;code&gt;Object&lt;/code&gt;s given path-like requests,
+where the potential suppliers of such &lt;code&gt;Object&lt;/code&gt;s can be more or less
+suitable for any given request.  This lines up pretty well with the
+requirements of a Java-centric configuration system.  There are
+lessons to be learned here that can be applied to the design of a
+&amp;ldquo;real&amp;rdquo; Java-centric configuration system.&lt;/p&gt;
+</description>
     </item>
     
   </channel>

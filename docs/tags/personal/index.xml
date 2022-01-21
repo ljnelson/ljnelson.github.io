@@ -14,8 +14,9 @@
       <pubDate>Fri, 17 Dec 2021 16:08:01 -0800</pubDate>
       <author>ljnelson@gmail.com (Laird Nelson)</author>
       <guid>https://ljnelson.github.io/blog/welcome/</guid>
-      <description>Hello and welcome to my new blog.
-My old blog is still available.</description>
+      <description>&lt;p&gt;Hello and welcome to my new blog.&lt;/p&gt;
+&lt;p&gt;My &lt;a href=&#34;https://lairdnelson.wordpress.com/&#34;&gt;old blog&lt;/a&gt; is still available.&lt;/p&gt;
+</description>
     </item>
     
   </channel>
