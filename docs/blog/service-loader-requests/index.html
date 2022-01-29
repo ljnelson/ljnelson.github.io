@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang='en' dir='auto'><head>
+  <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='description' content='Table Of Contents  What Would a ServiceLoader That Could Take Requests Look Like?  Objectspace Ambiguity Addressing  ServiceLoader Addressing Jakarta RESTful Web Services Addressing JNDI Addressing   Loaders, Paths and Qualifiers   What&rsquo;s Next?    What Would a ServiceLoader That Could Take Requests Look Like? In this ongoing series related to Java configuration, I&rsquo;ve covered JNDI and Jakarta RESTful Web Services. Both involve loading Java Objects from potentially many providers with disambiguation algorithms built in, and both permit the application assembler to work around naming clashes.'>
+<meta name='theme-color' content='#001dc0'>
+
+<meta property='og:title' content='Service Loader Requests • Blame Laird'>
+<meta property='og:description' content='Table Of Contents  What Would a ServiceLoader That Could Take Requests Look Like?  Objectspace Ambiguity Addressing  ServiceLoader Addressing Jakarta RESTful Web Services Addressing JNDI Addressing   Loaders, Paths and Qualifiers   What&rsquo;s Next?    What Would a ServiceLoader That Could Take Requests Look Like? In this ongoing series related to Java configuration, I&rsquo;ve covered JNDI and Jakarta RESTful Web Services. Both involve loading Java Objects from potentially many providers with disambiguation algorithms built in, and both permit the application assembler to work around naming clashes.'>
+<meta property='og:url' content='https://ljnelson.github.io/blog/service-loader-requests/'>
+<meta property='og:site_name' content='Blame Laird'>
+<meta property='og:type' content='article'><meta property='article:section' content='blog'><meta property='article:tag' content='java'><meta property='article:tag' content='config'><meta property='article:published_time' content='2022-01-28T14:52:27-08:00'/><meta property='article:modified_time' content='2022-01-28T14:52:27-08:00'/><meta name='twitter:card' content='summary'>
+
+<meta name="generator" content="Hugo 0.92.1" />
+
+  <title>Service Loader Requests • Blame Laird</title>
+  <link rel='canonical' href='https://ljnelson.github.io/blog/service-loader-requests/'>
+  
+  
+  <link rel='icon' href='/images/dougflag.svg'>
+<link rel='stylesheet' href='/assets/css/main.ab98e12b.css'><link rel='stylesheet' href='/css/custom.css'><style>
+:root{--color-accent:#001dc0;}
+</style>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPDL2GWEZY"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-VPDL2GWEZY', { 'anonymize_ip': false });
+}
+</script>
+
+  
+</head>
+<body class='page type-blog has-sidebar'>
+
+  <div class='site'><div id='sidebar' class='sidebar'>
+  <a class='screen-reader-text' href='#main-menu'>Skip to Main Menu</a>
+
+  <div class='container'><section class='widget widget-about sep-after'>
+  <header>
+    
+    <div class='logo'>
+      <a href='/'>
+        <img src='/images/dougflag.png'>
+      </a>
+    </div>
+    
+    <h2 class='title site-title '>
+      <a href='/'>
+      Blame Laird
+      </a>
+    </h2>
+    <div class='desc'>
+    Sum Ergo Mea Culpa Est
+    </div>
+  </header>
+
+</section>
+<section class='widget widget-search sep-after'>
+  <header>
+    <h4 class='title widget-title'>Search</h4>
+  </header>
+
+  <form action='/search' id='search-form' class='search-form'>
+    <label>
+      <span class='screen-reader-text'>Search</span>
+      <input id='search-term' class='search-term' type='search' name='q' placeholder='Search&hellip;'>
+    </label></form>
+
+</section>
+<section class='widget widget-taxonomy_cloud sep-after'>
+  <header>
+    <h4 class='title widget-title'>Tags</h4>
+  </header>
+
+  <div class='container list-container'>
+  <ul class='list taxonomy-cloud'><li>
+        <a href='/tags/config/' style='font-size:2em'>config</a>
+      </li><li>
+        <a href='/tags/java/' style='font-size:2em'>java</a>
+      </li><li>
+        <a href='/tags/jaxrs/' style='font-size:1em'>jaxrs</a>
+      </li><li>
+        <a href='/tags/jndi/' style='font-size:1em'>jndi</a>
+      </li><li>
+        <a href='/tags/personal/' style='font-size:1em'>personal</a>
+      </li></ul>
+</div>
+
+
+</section>
+</div>
+
+  <div class='sidebar-overlay'></div>
+</div><div class='main'><nav id='main-menu' class='menu main-menu' aria-label='Main Menu'>
+  <div class='container'>
+    <a class='screen-reader-text' href='#content'>Skip to Content</a>
+
+<button id='sidebar-toggler' class='sidebar-toggler' aria-controls='sidebar'>
+  <span class='screen-reader-text'>Toggle Sidebar</span>
+  <span class='open'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="3" y1="12" x2="21" y2="12" />
+<line x1="3" y1="6" x2="21" y2="6" />
+<line x1="3" y1="18" x2="21" y2="18" />
+</svg>
+</span>
+  <span class='close'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="18" y1="6" x2="6" y2="18" />
+<line x1="6" y1="6" x2="18" y2="18" />
+</svg>
+</span>
+</button>
+    <ul><li class='item'>
+        <a href='/'>Home</a>
+      </li><li class='item'>
+        <a href='https://about.me/lairdnelson'>About</a>
+      </li><li class='item current'>
+        <a aria-current='page' href='/blog/'>Blog</a>
+      </li></ul>
+  </div>
+</nav><div class='header-widgets'>
+        <div class='container'>
+    
+    <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
+  <section class='widget widget-breadcrumbs sep-after'>
+    <nav id='breadcrumbs'>
+      <ol><li><a href='/'>Home</a></li><li><a href='/blog/'>Blog</a></li><li><span>Service Loader Requests</span></li></ol>
+    </nav>
+  </section></div>
+      </div>
+
+      <header id='header' class='header site-header'>
+        <div class='container sep-after'>
+          <div class='header-info'><p class='site-title title'>Blame Laird</p><p class='desc site-desc'>Sum Ergo Mea Culpa Est</p>
+          </div>
+        </div>
+      </header>
+
+      <main id='content'>
+
+
+<article lang='en' class='entry'>
+  <header class='header entry-header'>
+  <div class='container sep-after'>
+    <div class='header-info'>
+      <h1 class='title'>Service Loader Requests</h1>
+      
+
+    </div>
+    <div class='entry-meta'>
+  <span class='posted-on'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+<line x1="16" y1="2" x2="16" y2="6" />
+<line x1="8" y1="2" x2="8" y2="6" />
+<line x1="3" y1="10" x2="21" y2="10" />
+</svg>
+<span class='screen-reader-text'>Posted on </span>
+  <time class='entry-date' datetime='2022-01-28T14:52:27-08:00'>2022-01-28</time>
+</span>
+
+  
+  
+<span class='reading-time'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><circle cx="12" cy="12" r="10" />
+<polyline points="12 6 12 12 15 15" />
+</svg>
+10 mins read
+</span>
+
+
+</div>
+
+
+  </div>
+</header>
+
+  
+  
+
+  <div class='container entry-content'>
+  <div>
+  <h2 id="table-of-contents">Table Of Contents</h2>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#what-would-a-serviceloader-that-could-take-requests-look-like">What Would a <code>ServiceLoader</code> That Could Take Requests Look Like?</a>
+      <ul>
+        <li><a href="#objectspace">Objectspace</a></li>
+        <li><a href="#ambiguity">Ambiguity</a></li>
+        <li><a href="#addressing">Addressing</a>
+          <ul>
+            <li><a href="#serviceloader-addressing"><code>ServiceLoader</code> Addressing</a></li>
+            <li><a href="#jakarta-restful-web-services-addressing">Jakarta RESTful Web Services Addressing</a></li>
+            <li><a href="#jndi-addressing">JNDI Addressing</a></li>
+          </ul>
+        </li>
+        <li><a href="#loaders-paths-and-qualifiers">Loaders, Paths and Qualifiers</a></li>
+      </ul>
+    </li>
+    <li><a href="#whats-next">What&rsquo;s Next?</a></li>
+  </ul>
+</nav>
+</div>
+
+<h2 id="what-would-a-serviceloader-that-could-take-requests-look-like">What Would a <code>ServiceLoader</code> That Could Take Requests Look Like?</h2>
+<p>In this ongoing series related to Java configuration, I&rsquo;ve covered
+<a href="/blog/java-configuration-jndi-and-naming-operations/">JNDI</a>
+and <a href="/blog/java-configuration-jaxrs-as-a-configuration-system/">Jakarta RESTful Web Services</a>.  Both
+involve loading Java <code>Object</code>s from potentially many providers with
+disambiguation algorithms built in, and both permit the application
+assembler to work around naming clashes.  Of course, neither is a Java
+configuration system.</p>
+<p>Let&rsquo;s look at some of the super-concepts these two technologies have
+in common.</p>
+<h3 id="objectspace">Objectspace</h3>
+<p>The first is what I&rsquo;ll call, somewhat pretentiously, <em>objectspace</em>.
+This is the notional space of all possible Java objects (and
+primitive types) in all possible Java virtual machines in all possible
+worlds.  Objectspace is big.</p>
+<p>You can pick out an individual object from objectspace, let&rsquo;s say, by
+supplying some <em>loading system</em> with an <em>address</em>.  (This sounds like
+pointers!  Indeed, that&rsquo;s part of the analogy I&rsquo;m going for.)  Give
+the system an address, it hands you back the corresponding object.  By
+definition, if you provide a precise enough address there will be
+exactly one object it picks out, never zero.  Simple.  What could
+possibly go wrong?</p>
+<p>To get an object from objectspace according to the rules as I&rsquo;ve laid
+them out so far, you have to be <em>remarkably</em> precise.  You&rsquo;d better be
+able to distinguish objects by type, certainly, and whatever the
+addressing scheme looks like, it better take type into account.  But
+you can&rsquo;t stop there.</p>
+<h3 id="ambiguity">Ambiguity</h3>
+<p>If we <em>do</em> stop there, we have to address ambiguity.  If I ask for
+what I hope is the only <code>String</code> in all of objectspace by asking a
+hypothetical loading system for the one true object that has the type
+<code>String.class</code>, the loading system will laugh in my face.  There are
+many <code>String</code>s in objectspace.</p>
+<p>OK, OK; I might instead want to ask this hypothetical loading system
+for a very particular <code>String</code>, namely the one in objectspace under
+the System property key <code>java.home</code>.  But even this isn&rsquo;t specific
+enough, since, remember, objectspace encompasses all Java objects in
+the universe.  There are many Java homes.  The one that identifies
+<em>my</em> Java installation is just one of them!  And yet I get a single
+<code>String</code> back, so, Laird, your analogy sucks.</p>
+<h3 id="addressing">Addressing</h3>
+<p>Not so fast!  When I ask for this hypothetical loading system to give
+me the <code>java.home</code> <code>String</code>, I&rsquo;m actually supplying plenty of other
+implicit addressing information in my request, whether I know I&rsquo;m
+doing this or not.  Specifically, I&rsquo;m <em>actually</em> asking for the only
+<code>String</code> in all of objectspace that has the type <code>String.class</code>, that
+is indexed under the System property key <code>java.home</code>, and on this JVM,
+running on this machine, on this architecture, in this universe, and
+so on and so forth.  That <em>may</em> be enough to pick out the <code>String</code> I
+want (and normally is in non-hypothetical, non-abstract,
+non-<a href="https://www.joelonsoftware.com/2001/04/21/dont-let-architecture-astronauts-scare-you/">architecture
+astronaut</a>
+cases).</p>
+<p>So types and JVM-wide names seem to be the bare minimum to pick out an
+object from all of objectspace.  Sounds easy—but that&rsquo;s not quite
+right either.</p>
+<p>Let&rsquo;s say instead that I would like this loading system to fetch me
+the one true <code>String</code> that can be found in some hazy way &ldquo;under&rdquo; the
+name <code>preferredHost</code> (I made this up so that it&rsquo;s not some key defined
+by Java itself).  Let&rsquo;s further wave our hands about possible name
+collisions: let&rsquo;s pretend that no other developer in the entire
+universe could possibly ever be writing a class like mine, and no
+other developer in the entire universe could possibly ever mean
+anything semantically different from what I mean when I say
+<code>preferredHost</code>.  (In practice, of course, these assumptions are
+completely ridiculous.  Bear with me; we&rsquo;ll get there.)</p>
+<p>But if my application is running in <code>test</code>, in some sort of hazy way,
+then there may very well be an ambiguity here.  <code>preferredHost</code> and
+<code>String.class</code> no longer uniquely identify a <code>String</code> in objectspace.
+Maybe there is another string value indexed under <code>preferredHost</code> in
+objectspace (that identifies the <code>production</code> <code>preferredHost</code> for
+example).  Oh, shoot, I guess really what I was asking for all along
+was the one true <code>String</code> indexed under the explicit name
+<code>preferredHost</code> and the implicit name <code>test</code>.  (Note that in no way
+was I asking for the explicit name <code>test.preferredHost</code>, nor did I
+have some kind of fallback in mind.)  As a component developer, I of
+course didn&rsquo;t know what application my component was running in, so it
+didn&rsquo;t occur to me to check for this case.  Oops.</p>
+<p>Objectspace is <em>big</em>.  Like, <a href="https://www.goodreads.com/quotes/14434-space-is-big-you-just-won-t-believe-how-vastly-hugely">you just won&rsquo;t believe how vastly,
+hugely, mind-bogglingly big it
+is</a>.
+Picking out a single <code>Object</code> in it is damn near impossible.</p>
+<p>Instead, typically what we do, while blissfully not being aware of it,
+is: we supply <em>some</em> addressing information, and then rely on some
+common case where we were expecting one thing, and there was only one
+thing that happened to match our imprecise addressing information, and
+we asked our loading system for it, and it responded, and we got only
+one thing, not 27, and it never occurs to us that 27 of those things
+is actually a very real possibility.  Then the bugs roll in.</p>
+<p><strong>Good loading system APIs recognize that no addressing system you can
+come up with will ever pick out an object from objectspace without
+some kind of further disambiguation.</strong></p>
+<h4 id="serviceloader-addressing"><code>ServiceLoader</code> Addressing</h4>
+<p>Let&rsquo;s look at
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/ServiceLoader.html"><code>java.util.ServiceLoader</code></a>
+as an example.  This class deliberately embraces ambiguity.  The only
+kind of addressing information you can give it is type.  Ask a
+<code>ServiceLoader</code> for the thing corresponding to <code>SomeService.class</code>,
+and it will hand you back an <code>Iterable&lt;SomeService&gt;</code>.  Anyone can put
+a service provider file on the classpath (discoverable as a classpath
+resource at <code>META-INF/services/com.foo.SomeService</code>, let&rsquo;s say), and
+its entries will be picked up.  So great, how do you filter all the
+various <code>SomeService</code> implementors?  That, dear reader, is up to you.</p>
+<p>The upshot is: <code>ServiceLoader</code>, like many loading systems, accounts
+for the almost completely necessary ambiguity of objectspace in its
+API design.  Ask for a thing of a type, get back many things of that
+type.  Your problem to solve.</p>
+<h4 id="jakarta-restful-web-services-addressing">Jakarta RESTful Web Services Addressing</h4>
+<p>Let&rsquo;s consider Jakarta RESTful Web Services.  Let&rsquo;s pretend that
+Jakarta RESTful Web Services is, among other things, a way to (again,
+partially) address into objectspace.  After all, with a resource
+method you can say, effectively, &ldquo;this method will return a
+<code>SomeService</code> if the addressing information matches the path <code>a/b/c</code>
+and the media type <code>application/json</code>.&rdquo;.  So if you ask <em>this</em> loading
+system for a <code>SomeService.class</code> object, providing no path information
+and no media type information, the ambiguity is reduced somewhat: this
+resource method I described will not &ldquo;fire&rdquo; and it, at least, will not
+be responsible for returning a <code>SomeService</code>.  Some other resource
+method might.  If more than one &ldquo;fires&rdquo;, then there is an algorithm
+that somewhat arbitrarily picks one.</p>
+<h4 id="jndi-addressing">JNDI Addressing</h4>
+<p>Let&rsquo;s consider JNDI.  Let&rsquo;s pretend that JNDI is, among other things,
+a way to (again, partially) address into objectspace.  After all, with
+a
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/spi/ObjectFactory.html"><code>javax.naming.spi.ObjectFactory</code></a>
+you can say, effectively, &ldquo;this <code>ObjectFactory</code> will return a
+<code>SomeService</code> if the addressing information matches the <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/CompoundName.html">compound
+name</a>
+<code>a/b/c</code> and an expected
+<a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/spi/ObjectFactory.html#getObjectInstance(java.lang.Object,javax.naming.Name,javax.naming.Context,java.util.Hashtable)"><code>environment</code></a>.&rdquo;
+So if you ask <em>this</em> loading system for a <code>SomeService.class</code> object,
+providing no compound name information and no environment information,
+the ambiguity is reduced somewhat: this <code>ObjectFactory</code> I described
+will not &ldquo;fire&rdquo; and it, at least, will not be responsible for
+returning a <code>SomeService</code>.  Some other <code>ObjectFactory</code> might.  If more
+than one &ldquo;fires&rdquo;, then there is an algorithm that somewhat arbitrarily
+picks one.</p>
+<p>(You of course see the similarity.)</p>
+<p>Each of these loading systems differs, of course, in what its
+&ldquo;loaders&rdquo; are permitted to do (resource methods and <code>ObjectFactory</code>
+instances have to play by the rules of their specifications).  And
+each loading system permits more or less addressing information to
+&ldquo;ride along&rdquo; with the general request for a typed Java <code>Object</code> from
+objectspace, to help pare down the possible matching objects to a
+manageable number.  But they&rsquo;re very similar when we look at them as
+object loading systems that accept reasonably fine-grained addressing
+information that identifies many things, but hopefully not lots of
+things.</p>
+<p>Finally, each of these systems is not a Java configuration system!
+But you know what is a configuration system, of a sort?
+<code>java.util.ServiceLoader</code>.  It is a configuration system that just so
+happens to have punted the problem of resolving ambiguity to the end
+user.  It is also designed to satisfy only one of several
+configuration-related use cases, which it does very well.  What if we
+augmented <code>ServiceLoader</code> with the ability to receive some kind of
+addressing information that would allow it to avoid ambiguity in more
+cases than it does right now?  What would we need to add?</p>
+<h3 id="loaders-paths-and-qualifiers">Loaders, Paths and Qualifiers</h3>
+<p>First, let&rsquo;s talk terminology.  A configuration system doesn&rsquo;t just
+load services, so we&rsquo;ll drop that word.  So <code>ServiceLoader</code> will
+become <code>Loader</code> for this discussion, and &ldquo;service provider&rdquo; will
+become &ldquo;provider&rdquo;, and so on.</p>
+<p>Next, we need a good word for our addressing information.  We can look
+to JNDI and Jakarta RESTful web services here.  In JNDI, the
+addressing information is termed a <em>name</em>.  In Jakarta RESTful Web
+Services, the addressing information is termed a <em>path</em> (since of
+course it is concerned with URIs).  I like <em>path</em> better than <em>name</em>
+for addressing information because it implies a type (a filesystem
+path yields a file, for example; a Jakarta RESTful Web Services path
+yields an object of a particular media type) and can either imply a
+tree structure or not, depending on how it&rsquo;s used.  It&rsquo;s also about
+finding your way to a destination.  So we&rsquo;ll go with path.</p>
+<p>The kind of path we&rsquo;ll talk about is similar to Jakarta RESTful Web
+Services' path: it is sparse.  That is, it&rsquo;s not the case that every
+element in a path necessarily identifies an object at that location
+(in direct contrast with JNDI, where every atomic name in a compound
+name identifies a context).  In this regard, a path is like a pointer
+or a probe: ultimately what matters is what it picks out at the end,
+not the intermediate objects that may exist along the way.</p>
+<p>Our path will also need to have the ability to pass additional
+addressing information.  JNDI has <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/Context.html#:~:text=provider%20may%20not.-,Environment%20Properties,-JNDI%20applications%20need">environment
+properties</a>.
+Jakarta RESTful Web Services provides resource methods with the
+ability to inspect headers, query string parameters, path parameters
+and matrix parameters.  Each of these facilities is a way to further
+<em>qualify</em> a request.  We&rsquo;ll consequently follow in the <a href="https://jakarta.ee/specifications/cdi/3.0/jakarta-cdi-spec-3.0.html#qualifiers">terminological
+footsteps of systems like
+CDI</a>
+and call this additional addressing information <em>qualifiers</em>.</p>
+<p><strong>Putting it all together, a <em>path</em> is a <em>typed</em> and <em>qualified</em>
+ordered sequence of <em>elements</em> that identifies zero or more objects in
+objectspace.</strong></p>
+<p><strong>A <em>loader</em> is a component that dereferences a path.</strong></p>
+<p>If you look at things this way, then a <code>java.util.ServiceLoader</code> is a
+loader that dereferences very particular kinds of paths, namely those
+that have a type, zero elements and no qualifiers.</p>
+<h2 id="whats-next">What&rsquo;s Next?</h2>
+<p>We&rsquo;re on our way, but we&rsquo;re not there yet.  What lies at the end of
+any path is not necessarily an object, but may be nothing or many
+objects.  Also, since in the real world the objectspace we&rsquo;re dealing
+with at any given time in any given system is actually fairly small
+and sparsely populated, we might want a strategy for what to do when a
+path doesn&rsquo;t actually identify anything but something else might be
+<em>suitable</em> for it.</p>
+<p>Additionally, even if a path <em>does</em> identify something, it may come
+and go over time, being <em>temporarily</em> or <em>permanently</em> <em>absent</em> or
+<em>present</em>.  What our loader loads may therefore need to be not the
+object itself, but some kind of dereferencer that is pinned to the
+path that yielded it.</p>
+<p>There is also the notion of an application&rsquo;s <em>environment</em> to be
+concerned with.  An application&rsquo;s environment is the portion of
+objectspace it inhabits (the machine it lives on, the locale it&rsquo;s in,
+various other automatic and implicit coordinates, and the
+human-authored configuration that is suitable for it), which includes
+parts that a <em>component</em> of that application, asking for an object to
+be loaded, is unaware of, but that are necessary to include with the
+addressing information.  Other environments within objectspace may or
+may not be suitable for a loader to consider when trying to
+dereference a path.</p>
+<p>The journey continues; stay tuned.</p>
+
+</div>
+
+  
+<footer class='entry-footer'>
+  <div class='container sep-before'><div class='tags'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M20.59,13.41l-7.17,7.17a2,2,0,0,1-2.83,0L2,12V2H12l8.59,8.59A2,2,0,0,1,20.59,13.41Z" />
+<line x1="7" y1="7" x2="7" y2="7" />
+</svg>
+<span class='screen-reader-text'>Tags: </span><a class='tag' href='/tags/java/'>java</a>, <a class='tag' href='/tags/config/'>config</a></div>
+
+  </div>
+</footer>
+
+
+</article>
+
+<nav class='entry-nav'>
+  <div class='container'><div class='prev-entry sep-before'>
+      <a href='/blog/java-configuration-jaxrs-as-a-configuration-system/'>
+        <span aria-hidden='true'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="20" y1="12" x2="4" y2="12" />
+<polyline points="10 18 4 12 10 6" />
+</svg>
+ Previous</span>
+        <span class='screen-reader-text'>Previous post: </span>Java Configuration: JAX-RS as a Configuration System</a>
+    </div></div>
+</nav>
+
+
+
+
+      </main>
+
+      <footer id='footer' class='footer'>
+        <div class='container sep-before'><section class='widget widget-social_menu sep-after'><nav aria-label='Social Menu'>
+    <ul><li>
+        <a href='https://github.com/ljnelson' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Github account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+</svg>
+</a>
+      </li><li>
+        <a href='https://linkedin.com/in/ljnelson' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Linkedin account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+<rect x="2" y="9" width="4" height="12" />
+<circle cx="4" cy="4" r="2" />
+</svg>
+</a>
+      </li><li>
+        <a href='https://www.youtube.com/channel/UCBUnNk5vMOw9D7EGwT8wfQQ' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Youtube account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
+<polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+</svg>
+</a>
+      </li><li>
+        <a href='https://instagram.com/chuggid' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Instagram account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+<path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+<line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+</svg>
+</a>
+      </li></ul>
+  </nav>
+</section><div class='copyright'>
+  <p> &copy; 2021-2022 Laird Nelson </p>
+</div>
+
+        </div>
+      </footer>
+
+    </div>
+  </div><script>window.__assets_js_src="/assets/js/"</script>
+
+<script src='/assets/js/main.c3bcf2df.js'></script><script src='/js/custom.js'></script>
+
+</body>
+
+</html>
+

@@ -9,6 +9,258 @@
     <webMaster>ljnelson@gmail.com (Laird Nelson)</webMaster>
     <lastBuildDate>Fri, 17 Dec 2021 14:18:00 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Service Loader Requests</title>
+      <link>https://ljnelson.github.io/blog/service-loader-requests/</link>
+      <pubDate>Fri, 28 Jan 2022 14:52:27 -0800</pubDate>
+      <author>ljnelson@gmail.com (Laird Nelson)</author>
+      <guid>https://ljnelson.github.io/blog/service-loader-requests/</guid>
+      <description>&lt;div&gt;
+  &lt;h2 id=&#34;table-of-contents&#34;&gt;Table Of Contents&lt;/h2&gt;
+  &lt;nav id=&#34;TableOfContents&#34;&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href=&#34;#what-would-a-serviceloader-that-could-take-requests-look-like&#34;&gt;What Would a &lt;code&gt;ServiceLoader&lt;/code&gt; That Could Take Requests Look Like?&lt;/a&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href=&#34;#objectspace&#34;&gt;Objectspace&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#ambiguity&#34;&gt;Ambiguity&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#addressing&#34;&gt;Addressing&lt;/a&gt;
+          &lt;ul&gt;
+            &lt;li&gt;&lt;a href=&#34;#serviceloader-addressing&#34;&gt;&lt;code&gt;ServiceLoader&lt;/code&gt; Addressing&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&#34;#jakarta-restful-web-services-addressing&#34;&gt;Jakarta RESTful Web Services Addressing&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&#34;#jndi-addressing&#34;&gt;JNDI Addressing&lt;/a&gt;&lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;/li&gt;
+        &lt;li&gt;&lt;a href=&#34;#loaders-paths-and-qualifiers&#34;&gt;Loaders, Paths and Qualifiers&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#whats-next&#34;&gt;What&amp;rsquo;s Next?&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&#34;what-would-a-serviceloader-that-could-take-requests-look-like&#34;&gt;What Would a &lt;code&gt;ServiceLoader&lt;/code&gt; That Could Take Requests Look Like?&lt;/h2&gt;
+&lt;p&gt;In this ongoing series related to Java configuration, I&amp;rsquo;ve covered
+&lt;a href=&#34;https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/&#34;&gt;JNDI&lt;/a&gt;
+and &lt;a href=&#34;https://ljnelson.github.io/blog/java-configuration-jaxrs-as-a-configuration-system/&#34;&gt;Jakarta RESTful Web Services&lt;/a&gt;.  Both
+involve loading Java &lt;code&gt;Object&lt;/code&gt;s from potentially many providers with
+disambiguation algorithms built in, and both permit the application
+assembler to work around naming clashes.  Of course, neither is a Java
+configuration system.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s look at some of the super-concepts these two technologies have
+in common.&lt;/p&gt;
+&lt;h3 id=&#34;objectspace&#34;&gt;Objectspace&lt;/h3&gt;
+&lt;p&gt;The first is what I&amp;rsquo;ll call, somewhat pretentiously, &lt;em&gt;objectspace&lt;/em&gt;.
+This is the notional space of all possible Java objects (and
+primitive types) in all possible Java virtual machines in all possible
+worlds.  Objectspace is big.&lt;/p&gt;
+&lt;p&gt;You can pick out an individual object from objectspace, let&amp;rsquo;s say, by
+supplying some &lt;em&gt;loading system&lt;/em&gt; with an &lt;em&gt;address&lt;/em&gt;.  (This sounds like
+pointers!  Indeed, that&amp;rsquo;s part of the analogy I&amp;rsquo;m going for.)  Give
+the system an address, it hands you back the corresponding object.  By
+definition, if you provide a precise enough address there will be
+exactly one object it picks out, never zero.  Simple.  What could
+possibly go wrong?&lt;/p&gt;
+&lt;p&gt;To get an object from objectspace according to the rules as I&amp;rsquo;ve laid
+them out so far, you have to be &lt;em&gt;remarkably&lt;/em&gt; precise.  You&amp;rsquo;d better be
+able to distinguish objects by type, certainly, and whatever the
+addressing scheme looks like, it better take type into account.  But
+you can&amp;rsquo;t stop there.&lt;/p&gt;
+&lt;h3 id=&#34;ambiguity&#34;&gt;Ambiguity&lt;/h3&gt;
+&lt;p&gt;If we &lt;em&gt;do&lt;/em&gt; stop there, we have to address ambiguity.  If I ask for
+what I hope is the only &lt;code&gt;String&lt;/code&gt; in all of objectspace by asking a
+hypothetical loading system for the one true object that has the type
+&lt;code&gt;String.class&lt;/code&gt;, the loading system will laugh in my face.  There are
+many &lt;code&gt;String&lt;/code&gt;s in objectspace.&lt;/p&gt;
+&lt;p&gt;OK, OK; I might instead want to ask this hypothetical loading system
+for a very particular &lt;code&gt;String&lt;/code&gt;, namely the one in objectspace under
+the System property key &lt;code&gt;java.home&lt;/code&gt;.  But even this isn&amp;rsquo;t specific
+enough, since, remember, objectspace encompasses all Java objects in
+the universe.  There are many Java homes.  The one that identifies
+&lt;em&gt;my&lt;/em&gt; Java installation is just one of them!  And yet I get a single
+&lt;code&gt;String&lt;/code&gt; back, so, Laird, your analogy sucks.&lt;/p&gt;
+&lt;h3 id=&#34;addressing&#34;&gt;Addressing&lt;/h3&gt;
+&lt;p&gt;Not so fast!  When I ask for this hypothetical loading system to give
+me the &lt;code&gt;java.home&lt;/code&gt; &lt;code&gt;String&lt;/code&gt;, I&amp;rsquo;m actually supplying plenty of other
+implicit addressing information in my request, whether I know I&amp;rsquo;m
+doing this or not.  Specifically, I&amp;rsquo;m &lt;em&gt;actually&lt;/em&gt; asking for the only
+&lt;code&gt;String&lt;/code&gt; in all of objectspace that has the type &lt;code&gt;String.class&lt;/code&gt;, that
+is indexed under the System property key &lt;code&gt;java.home&lt;/code&gt;, and on this JVM,
+running on this machine, on this architecture, in this universe, and
+so on and so forth.  That &lt;em&gt;may&lt;/em&gt; be enough to pick out the &lt;code&gt;String&lt;/code&gt; I
+want (and normally is in non-hypothetical, non-abstract,
+non-&lt;a href=&#34;https://www.joelonsoftware.com/2001/04/21/dont-let-architecture-astronauts-scare-you/&#34;&gt;architecture
+astronaut&lt;/a&gt;
+cases).&lt;/p&gt;
+&lt;p&gt;So types and JVM-wide names seem to be the bare minimum to pick out an
+object from all of objectspace.  Sounds easy—but that&amp;rsquo;s not quite
+right either.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s say instead that I would like this loading system to fetch me
+the one true &lt;code&gt;String&lt;/code&gt; that can be found in some hazy way &amp;ldquo;under&amp;rdquo; the
+name &lt;code&gt;preferredHost&lt;/code&gt; (I made this up so that it&amp;rsquo;s not some key defined
+by Java itself).  Let&amp;rsquo;s further wave our hands about possible name
+collisions: let&amp;rsquo;s pretend that no other developer in the entire
+universe could possibly ever be writing a class like mine, and no
+other developer in the entire universe could possibly ever mean
+anything semantically different from what I mean when I say
+&lt;code&gt;preferredHost&lt;/code&gt;.  (In practice, of course, these assumptions are
+completely ridiculous.  Bear with me; we&amp;rsquo;ll get there.)&lt;/p&gt;
+&lt;p&gt;But if my application is running in &lt;code&gt;test&lt;/code&gt;, in some sort of hazy way,
+then there may very well be an ambiguity here.  &lt;code&gt;preferredHost&lt;/code&gt; and
+&lt;code&gt;String.class&lt;/code&gt; no longer uniquely identify a &lt;code&gt;String&lt;/code&gt; in objectspace.
+Maybe there is another string value indexed under &lt;code&gt;preferredHost&lt;/code&gt; in
+objectspace (that identifies the &lt;code&gt;production&lt;/code&gt; &lt;code&gt;preferredHost&lt;/code&gt; for
+example).  Oh, shoot, I guess really what I was asking for all along
+was the one true &lt;code&gt;String&lt;/code&gt; indexed under the explicit name
+&lt;code&gt;preferredHost&lt;/code&gt; and the implicit name &lt;code&gt;test&lt;/code&gt;.  (Note that in no way
+was I asking for the explicit name &lt;code&gt;test.preferredHost&lt;/code&gt;, nor did I
+have some kind of fallback in mind.)  As a component developer, I of
+course didn&amp;rsquo;t know what application my component was running in, so it
+didn&amp;rsquo;t occur to me to check for this case.  Oops.&lt;/p&gt;
+&lt;p&gt;Objectspace is &lt;em&gt;big&lt;/em&gt;.  Like, &lt;a href=&#34;https://www.goodreads.com/quotes/14434-space-is-big-you-just-won-t-believe-how-vastly-hugely&#34;&gt;you just won&amp;rsquo;t believe how vastly,
+hugely, mind-bogglingly big it
+is&lt;/a&gt;.
+Picking out a single &lt;code&gt;Object&lt;/code&gt; in it is damn near impossible.&lt;/p&gt;
+&lt;p&gt;Instead, typically what we do, while blissfully not being aware of it,
+is: we supply &lt;em&gt;some&lt;/em&gt; addressing information, and then rely on some
+common case where we were expecting one thing, and there was only one
+thing that happened to match our imprecise addressing information, and
+we asked our loading system for it, and it responded, and we got only
+one thing, not 27, and it never occurs to us that 27 of those things
+is actually a very real possibility.  Then the bugs roll in.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Good loading system APIs recognize that no addressing system you can
+come up with will ever pick out an object from objectspace without
+some kind of further disambiguation.&lt;/strong&gt;&lt;/p&gt;
+&lt;h4 id=&#34;serviceloader-addressing&#34;&gt;&lt;code&gt;ServiceLoader&lt;/code&gt; Addressing&lt;/h4&gt;
+&lt;p&gt;Let&amp;rsquo;s look at
+&lt;a href=&#34;https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/ServiceLoader.html&#34;&gt;&lt;code&gt;java.util.ServiceLoader&lt;/code&gt;&lt;/a&gt;
+as an example.  This class deliberately embraces ambiguity.  The only
+kind of addressing information you can give it is type.  Ask a
+&lt;code&gt;ServiceLoader&lt;/code&gt; for the thing corresponding to &lt;code&gt;SomeService.class&lt;/code&gt;,
+and it will hand you back an &lt;code&gt;Iterable&amp;lt;SomeService&amp;gt;&lt;/code&gt;.  Anyone can put
+a service provider file on the classpath (discoverable as a classpath
+resource at &lt;code&gt;META-INF/services/com.foo.SomeService&lt;/code&gt;, let&amp;rsquo;s say), and
+its entries will be picked up.  So great, how do you filter all the
+various &lt;code&gt;SomeService&lt;/code&gt; implementors?  That, dear reader, is up to you.&lt;/p&gt;
+&lt;p&gt;The upshot is: &lt;code&gt;ServiceLoader&lt;/code&gt;, like many loading systems, accounts
+for the almost completely necessary ambiguity of objectspace in its
+API design.  Ask for a thing of a type, get back many things of that
+type.  Your problem to solve.&lt;/p&gt;
+&lt;h4 id=&#34;jakarta-restful-web-services-addressing&#34;&gt;Jakarta RESTful Web Services Addressing&lt;/h4&gt;
+&lt;p&gt;Let&amp;rsquo;s consider Jakarta RESTful Web Services.  Let&amp;rsquo;s pretend that
+Jakarta RESTful Web Services is, among other things, a way to (again,
+partially) address into objectspace.  After all, with a resource
+method you can say, effectively, &amp;ldquo;this method will return a
+&lt;code&gt;SomeService&lt;/code&gt; if the addressing information matches the path &lt;code&gt;a/b/c&lt;/code&gt;
+and the media type &lt;code&gt;application/json&lt;/code&gt;.&amp;rdquo;.  So if you ask &lt;em&gt;this&lt;/em&gt; loading
+system for a &lt;code&gt;SomeService.class&lt;/code&gt; object, providing no path information
+and no media type information, the ambiguity is reduced somewhat: this
+resource method I described will not &amp;ldquo;fire&amp;rdquo; and it, at least, will not
+be responsible for returning a &lt;code&gt;SomeService&lt;/code&gt;.  Some other resource
+method might.  If more than one &amp;ldquo;fires&amp;rdquo;, then there is an algorithm
+that somewhat arbitrarily picks one.&lt;/p&gt;
+&lt;h4 id=&#34;jndi-addressing&#34;&gt;JNDI Addressing&lt;/h4&gt;
+&lt;p&gt;Let&amp;rsquo;s consider JNDI.  Let&amp;rsquo;s pretend that JNDI is, among other things,
+a way to (again, partially) address into objectspace.  After all, with
+a
+&lt;a href=&#34;https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/spi/ObjectFactory.html&#34;&gt;&lt;code&gt;javax.naming.spi.ObjectFactory&lt;/code&gt;&lt;/a&gt;
+you can say, effectively, &amp;ldquo;this &lt;code&gt;ObjectFactory&lt;/code&gt; will return a
+&lt;code&gt;SomeService&lt;/code&gt; if the addressing information matches the &lt;a href=&#34;https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/CompoundName.html&#34;&gt;compound
+name&lt;/a&gt;
+&lt;code&gt;a/b/c&lt;/code&gt; and an expected
+&lt;a href=&#34;https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/spi/ObjectFactory.html#getObjectInstance(java.lang.Object,javax.naming.Name,javax.naming.Context,java.util.Hashtable)&#34;&gt;&lt;code&gt;environment&lt;/code&gt;&lt;/a&gt;.&amp;rdquo;
+So if you ask &lt;em&gt;this&lt;/em&gt; loading system for a &lt;code&gt;SomeService.class&lt;/code&gt; object,
+providing no compound name information and no environment information,
+the ambiguity is reduced somewhat: this &lt;code&gt;ObjectFactory&lt;/code&gt; I described
+will not &amp;ldquo;fire&amp;rdquo; and it, at least, will not be responsible for
+returning a &lt;code&gt;SomeService&lt;/code&gt;.  Some other &lt;code&gt;ObjectFactory&lt;/code&gt; might.  If more
+than one &amp;ldquo;fires&amp;rdquo;, then there is an algorithm that somewhat arbitrarily
+picks one.&lt;/p&gt;
+&lt;p&gt;(You of course see the similarity.)&lt;/p&gt;
+&lt;p&gt;Each of these loading systems differs, of course, in what its
+&amp;ldquo;loaders&amp;rdquo; are permitted to do (resource methods and &lt;code&gt;ObjectFactory&lt;/code&gt;
+instances have to play by the rules of their specifications).  And
+each loading system permits more or less addressing information to
+&amp;ldquo;ride along&amp;rdquo; with the general request for a typed Java &lt;code&gt;Object&lt;/code&gt; from
+objectspace, to help pare down the possible matching objects to a
+manageable number.  But they&amp;rsquo;re very similar when we look at them as
+object loading systems that accept reasonably fine-grained addressing
+information that identifies many things, but hopefully not lots of
+things.&lt;/p&gt;
+&lt;p&gt;Finally, each of these systems is not a Java configuration system!
+But you know what is a configuration system, of a sort?
+&lt;code&gt;java.util.ServiceLoader&lt;/code&gt;.  It is a configuration system that just so
+happens to have punted the problem of resolving ambiguity to the end
+user.  It is also designed to satisfy only one of several
+configuration-related use cases, which it does very well.  What if we
+augmented &lt;code&gt;ServiceLoader&lt;/code&gt; with the ability to receive some kind of
+addressing information that would allow it to avoid ambiguity in more
+cases than it does right now?  What would we need to add?&lt;/p&gt;
+&lt;h3 id=&#34;loaders-paths-and-qualifiers&#34;&gt;Loaders, Paths and Qualifiers&lt;/h3&gt;
+&lt;p&gt;First, let&amp;rsquo;s talk terminology.  A configuration system doesn&amp;rsquo;t just
+load services, so we&amp;rsquo;ll drop that word.  So &lt;code&gt;ServiceLoader&lt;/code&gt; will
+become &lt;code&gt;Loader&lt;/code&gt; for this discussion, and &amp;ldquo;service provider&amp;rdquo; will
+become &amp;ldquo;provider&amp;rdquo;, and so on.&lt;/p&gt;
+&lt;p&gt;Next, we need a good word for our addressing information.  We can look
+to JNDI and Jakarta RESTful web services here.  In JNDI, the
+addressing information is termed a &lt;em&gt;name&lt;/em&gt;.  In Jakarta RESTful Web
+Services, the addressing information is termed a &lt;em&gt;path&lt;/em&gt; (since of
+course it is concerned with URIs).  I like &lt;em&gt;path&lt;/em&gt; better than &lt;em&gt;name&lt;/em&gt;
+for addressing information because it implies a type (a filesystem
+path yields a file, for example; a Jakarta RESTful Web Services path
+yields an object of a particular media type) and can either imply a
+tree structure or not, depending on how it&amp;rsquo;s used.  It&amp;rsquo;s also about
+finding your way to a destination.  So we&amp;rsquo;ll go with path.&lt;/p&gt;
+&lt;p&gt;The kind of path we&amp;rsquo;ll talk about is similar to Jakarta RESTful Web
+Services&#39; path: it is sparse.  That is, it&amp;rsquo;s not the case that every
+element in a path necessarily identifies an object at that location
+(in direct contrast with JNDI, where every atomic name in a compound
+name identifies a context).  In this regard, a path is like a pointer
+or a probe: ultimately what matters is what it picks out at the end,
+not the intermediate objects that may exist along the way.&lt;/p&gt;
+&lt;p&gt;Our path will also need to have the ability to pass additional
+addressing information.  JNDI has &lt;a href=&#34;https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/Context.html#:~:text=provider%20may%20not.-,Environment%20Properties,-JNDI%20applications%20need&#34;&gt;environment
+properties&lt;/a&gt;.
+Jakarta RESTful Web Services provides resource methods with the
+ability to inspect headers, query string parameters, path parameters
+and matrix parameters.  Each of these facilities is a way to further
+&lt;em&gt;qualify&lt;/em&gt; a request.  We&amp;rsquo;ll consequently follow in the &lt;a href=&#34;https://jakarta.ee/specifications/cdi/3.0/jakarta-cdi-spec-3.0.html#qualifiers&#34;&gt;terminological
+footsteps of systems like
+CDI&lt;/a&gt;
+and call this additional addressing information &lt;em&gt;qualifiers&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Putting it all together, a &lt;em&gt;path&lt;/em&gt; is a &lt;em&gt;typed&lt;/em&gt; and &lt;em&gt;qualified&lt;/em&gt;
+ordered sequence of &lt;em&gt;elements&lt;/em&gt; that identifies zero or more objects in
+objectspace.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;A &lt;em&gt;loader&lt;/em&gt; is a component that dereferences a path.&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;If you look at things this way, then a &lt;code&gt;java.util.ServiceLoader&lt;/code&gt; is a
+loader that dereferences very particular kinds of paths, namely those
+that have a type, zero elements and no qualifiers.&lt;/p&gt;
+&lt;h2 id=&#34;whats-next&#34;&gt;What&amp;rsquo;s Next?&lt;/h2&gt;
+&lt;p&gt;We&amp;rsquo;re on our way, but we&amp;rsquo;re not there yet.  What lies at the end of
+any path is not necessarily an object, but may be nothing or many
+objects.  Also, since in the real world the objectspace we&amp;rsquo;re dealing
+with at any given time in any given system is actually fairly small
+and sparsely populated, we might want a strategy for what to do when a
+path doesn&amp;rsquo;t actually identify anything but something else might be
+&lt;em&gt;suitable&lt;/em&gt; for it.&lt;/p&gt;
+&lt;p&gt;Additionally, even if a path &lt;em&gt;does&lt;/em&gt; identify something, it may come
+and go over time, being &lt;em&gt;temporarily&lt;/em&gt; or &lt;em&gt;permanently&lt;/em&gt; &lt;em&gt;absent&lt;/em&gt; or
+&lt;em&gt;present&lt;/em&gt;.  What our loader loads may therefore need to be not the
+object itself, but some kind of dereferencer that is pinned to the
+path that yielded it.&lt;/p&gt;
+&lt;p&gt;There is also the notion of an application&amp;rsquo;s &lt;em&gt;environment&lt;/em&gt; to be
+concerned with.  An application&amp;rsquo;s environment is the portion of
+objectspace it inhabits (the machine it lives on, the locale it&amp;rsquo;s in,
+various other automatic and implicit coordinates, and the
+human-authored configuration that is suitable for it), which includes
+parts that a &lt;em&gt;component&lt;/em&gt; of that application, asking for an object to
+be loaded, is unaware of, but that are necessary to include with the
+addressing information.  Other environments within objectspace may or
+may not be suitable for a loader to consider when trying to
+dereference a path.&lt;/p&gt;
+&lt;p&gt;The journey continues; stay tuned.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Java Configuration: JAX-RS as a Configuration System</title>
       <link>https://ljnelson.github.io/blog/java-configuration-jaxrs-as-a-configuration-system/</link>
       <pubDate>Sat, 01 Jan 2022 12:45:33 -0800</pubDate>
