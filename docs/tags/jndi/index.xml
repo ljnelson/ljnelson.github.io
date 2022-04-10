@@ -337,7 +337,7 @@ nothing?  Was it loaded from disk?  Served over the network?  You
 don&amp;rsquo;t know and you don&amp;rsquo;t care.&lt;/p&gt;
 &lt;p&gt;For certain cases, name resolution is absurdly simple: someone
 explicitly bound a textual string into a &lt;code&gt;Context&lt;/code&gt; under, say, the
-name &amp;ldquo;&lt;code&gt;hoopy&lt;/code&gt;&amp;quot;; you asked for the &lt;code&gt;Object&lt;/code&gt; bound under &amp;ldquo;&lt;code&gt;hoopy&lt;/code&gt;&amp;quot;; and
+name &amp;ldquo;&lt;code&gt;hoopy&lt;/code&gt;&amp;rdquo;; you asked for the &lt;code&gt;Object&lt;/code&gt; bound under &amp;ldquo;&lt;code&gt;hoopy&lt;/code&gt;&amp;rdquo;; and
 lo and behold you got back that very string—perhaps &amp;ldquo;&lt;code&gt;frood&lt;/code&gt;&amp;quot;—as a
 Java &lt;code&gt;String&lt;/code&gt; object.  Nothing fancy here.&lt;/p&gt;
 &lt;h4 id=&#34;objectfactory&#34;&gt;&lt;code&gt;ObjectFactory&lt;/code&gt;&lt;/h4&gt;

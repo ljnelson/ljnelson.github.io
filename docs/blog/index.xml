@@ -9,6 +9,129 @@
     <webMaster>ljnelson@gmail.com (Laird Nelson)</webMaster>
     <lastBuildDate>Fri, 17 Dec 2021 14:18:00 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Paths</title>
+      <link>https://ljnelson.github.io/blog/paths/</link>
+      <pubDate>Sun, 10 Apr 2022 10:52:18 -0700</pubDate>
+      <author>ljnelson@gmail.com (Laird Nelson)</author>
+      <guid>https://ljnelson.github.io/blog/paths/</guid>
+      <description>&lt;div&gt;
+  &lt;h2 id=&#34;table-of-contents&#34;&gt;Table Of Contents&lt;/h2&gt;
+  &lt;nav id=&#34;TableOfContents&#34;&gt;&lt;/nav&gt;
+&lt;/div&gt;
+
+&lt;h1 id=&#34;paths&#34;&gt;Paths&lt;/h1&gt;
+&lt;p&gt;In this ongoing series related to Java configuration, I&amp;rsquo;ve most
+recently covered &lt;a href=&#34;https://ljnelson.github.io/blog/service-loader-requests/&#34;&gt;what it might look like if you had a &lt;code&gt;ServiceLoader&lt;/code&gt;
+that could take requests&lt;/a&gt;.  I introduced the notion of a &lt;em&gt;path&lt;/em&gt;, a sparsely populated
+pointer of sorts to objects in objectspace.  Paths are not new, of
+course, and are present in everything from filesystems to JNDI to
+Jakarta RESTful Web Services.&lt;/p&gt;
+&lt;p&gt;In this post I&amp;rsquo;d like to dive a little deeper into how a path might be
+put together.&lt;/p&gt;
+&lt;p&gt;A path is used for addressing, so we want it to be as specific as we
+can possibly get it.  What does that mean?&lt;/p&gt;
+&lt;p&gt;Many times when we think about paths we think of them as if they were
+simply names.  Their elements, in this model, are simple strings, and
+they are separated by some kind of a separator, and that&amp;rsquo;s it.&lt;/p&gt;
+&lt;p&gt;This isn&amp;rsquo;t nearly enough for a configuration system addressing
+scheme.  Weirdly, several different configuration systems take this
+approach, and it is exactly &lt;em&gt;because&lt;/em&gt; they take this approach that
+they are deficient.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s look back at JNDI again.  While JNDI paths consist of name
+elements in a sequence, each element also has an
+&lt;a href=&#34;https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/Context.html#getEnvironment()&#34;&gt;environment&lt;/a&gt;.
+An environment in this system is just a bunch of key value pairs that
+&amp;ldquo;ride with&amp;rdquo; the path element (named &lt;code&gt;Context&lt;/code&gt; in JNDI).&lt;/p&gt;
+&lt;p&gt;Or let&amp;rsquo;s look at Jakarta RESTful Web Services again.  While paths
+there also consist of elements in a sequence, there are also headers
+and matrix parameters that might logically belong to each element in
+the sequence.  More key value pairs, if you squint in the right way.&lt;/p&gt;
+&lt;p&gt;Finally, if you look at all paths in a certain way, you can see that
+at their absolute heart they are &lt;em&gt;nothing more than key value pairs
+all the way down&lt;/em&gt;.  They aren&amp;rsquo;t &lt;em&gt;represented&lt;/em&gt; this way, of course, but
+fundamentally a JNDI &lt;code&gt;Context&lt;/code&gt; with an environment that contains &lt;code&gt;a = b&lt;/code&gt; and that is identified by a name of &lt;code&gt;a/b/c&lt;/code&gt; is really just a
+collection of key value pairs that consists of &lt;code&gt;{a = b, name = a/b/c}&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;This insight is kind of important.  It means that when a loader
+receives a request to load an object, it is, at some fundamental
+level, receiving an immutable set of key value pairs describing the
+request.  Once you see this you can&amp;rsquo;t unsee it, and
+names-with-separators addressing schemes just don&amp;rsquo;t measure up.&lt;/p&gt;
+&lt;p&gt;It is nevertheless true that some of these key value pairs are often
+more important to the human reader than others.  In the case of a JNDI
+&lt;code&gt;Context&lt;/code&gt;, the name itself is quite important since you always have to
+have one and the way it is represented indicates the depth of a
+hierarchy that might or might not be present.  Similarly, in Jakarta
+RESTful Web Services, the length of a path often tells you something,
+just by looking at it, about the specificity of the request.  So
+representing the value of a hypothetical &lt;code&gt;name&lt;/code&gt; key with a value that
+is a sequence of names makes some sense.&lt;/p&gt;
+&lt;p&gt;(Names, as frequently mentioned on this blog, always have implicit
+namespaces, so it&amp;rsquo;s important that paths&amp;rsquo; names be able to be
+&lt;em&gt;transliterated&lt;/em&gt;: if you, a class developer, decide that your path is
+going to have a name of &lt;code&gt;a/b&lt;/code&gt;, and I, an application assembler, know
+that &lt;code&gt;a/b&lt;/code&gt; is already spoken for by another class developer, then I
+have to have a way to reconcile this name clash.)&lt;/p&gt;
+&lt;p&gt;Similarly, there are plenty of implicit key value pairs that are part
+of a path even when the path builder doesn&amp;rsquo;t supply them explicitly.
+For example, the current &lt;code&gt;Locale&lt;/code&gt; or operating system might very well
+be a key whose value might help a loader find an appropriate object.
+Frequently these sorts of situational parameter values are not
+explicitly supplied by a user, but are understood nevertheless to be
+part of the loading request.  Making these of secondary concern seems
+like a good thing to do.&lt;/p&gt;
+&lt;p&gt;Finally, paths in all systems that use them have an implicit or
+explicit &lt;em&gt;type&lt;/em&gt;.  A filesystem path ends in a type
+(e.g. &lt;code&gt;java.io.File&lt;/code&gt; or &lt;code&gt;java.nio.file.Path&lt;/code&gt;).  A JNDI &lt;code&gt;Name&lt;/code&gt; ends in
+a type, but Java lacked the syntax to fully describe it; you can see
+the footprints in the
+&lt;a href=&#34;https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/NameClassPair.html&#34;&gt;&lt;code&gt;NameClassPair&lt;/code&gt;&lt;/a&gt;
+class.  A Jakarta RESTful Web Services path (of type &lt;code&gt;GET&lt;/code&gt; (oh look,
+another key value pair that rides with the request!)) terminates in an
+entity of a particular type.  The type is, of course, just another key
+value pair, logically speaking (&lt;code&gt;type = java.nio.file.Path&lt;/code&gt;), but is
+also a key value pair that is borne by all paths.  So it might make
+sense to represent it explicitly and elevate its primacy.&lt;/p&gt;
+&lt;p&gt;When we put this all together we get something like this:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A &lt;code&gt;Path&lt;/code&gt; is a sequence of &lt;code&gt;Path.Element&lt;/code&gt;s.&lt;/li&gt;
+&lt;li&gt;A &lt;code&gt;Path&lt;/code&gt; has &lt;code&gt;Qualifiers&lt;/code&gt; that are the key value pairs that qualify
+it.&lt;/li&gt;
+&lt;li&gt;A &lt;code&gt;Path&lt;/code&gt;&amp;rsquo;s final &lt;code&gt;Path.Element&lt;/code&gt; has a type, which is also the type
+of the &lt;code&gt;Path&lt;/code&gt;.
+&lt;ul&gt;
+&lt;li&gt;Other &lt;code&gt;Path.Element&lt;/code&gt;s need not have a type.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Each &lt;code&gt;Path.Element&lt;/code&gt; has a name.
+&lt;ul&gt;
+&lt;li&gt;A &lt;code&gt;Path.Element&lt;/code&gt; must be able to be transliterated without
+changing source code.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Each &lt;code&gt;Path.Element&lt;/code&gt; has &lt;code&gt;Qualifiers&lt;/code&gt; that qualify it and no other
+&lt;code&gt;Path.Element&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Any given &lt;code&gt;Path.Element&lt;/code&gt; may or may not have a type, but a
+&lt;code&gt;Path.Element&lt;/code&gt; that ends a &lt;code&gt;Path&lt;/code&gt; must have a type.&lt;/li&gt;
+&lt;li&gt;A &lt;code&gt;Path&lt;/code&gt;&amp;rsquo;s &lt;code&gt;Qualifiers&lt;/code&gt; includes qualifiers that qualify the path
+as a whole as well as the appropriately-scoped &lt;code&gt;Qualifiers&lt;/code&gt; from
+each of its &lt;code&gt;Path.Element&lt;/code&gt;s.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Note that each &lt;code&gt;Path.Element&lt;/code&gt; in the model described above does not
+have a type (paths can be sparsely populated).  So this does not
+imply any kind of hierarchy, nor should it.&lt;/p&gt;
+&lt;p&gt;I&amp;rsquo;ve quietly introduced the notion of a &lt;code&gt;Qualifiers&lt;/code&gt;, which is
+basically a read-only set of immutable key value pairs with a defined
+iteration order.  A &lt;code&gt;Qualifiers&lt;/code&gt; may be empty.&lt;/p&gt;
+&lt;p&gt;Again, just for the thought experiment, it&amp;rsquo;s worth remembering that a
+&lt;code&gt;Path&lt;/code&gt; could be fully represented as a &lt;code&gt;Map&lt;/code&gt; with required &lt;code&gt;name&lt;/code&gt; and
+&lt;code&gt;type&lt;/code&gt; keys that have non-&lt;code&gt;null&lt;/code&gt; values.  But for the reasons listed
+above it&amp;rsquo;s better to represent it as its own thing.&lt;/p&gt;
+&lt;p&gt;Since I&amp;rsquo;m proposing to build &lt;code&gt;Path&lt;/code&gt;s around &lt;code&gt;Qualifiers&lt;/code&gt;, the next
+post will dive into them a little more deeply.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Service Loader Requests</title>
       <link>https://ljnelson.github.io/blog/service-loader-requests/</link>
       <pubDate>Fri, 28 Jan 2022 14:52:27 -0800</pubDate>
@@ -210,7 +333,7 @@ yields an object of a particular media type) and can either imply a
 tree structure or not, depending on how it&amp;rsquo;s used.  It&amp;rsquo;s also about
 finding your way to a destination.  So we&amp;rsquo;ll go with path.&lt;/p&gt;
 &lt;p&gt;The kind of path we&amp;rsquo;ll talk about is similar to Jakarta RESTful Web
-Services&#39; path: it is sparse.  That is, it&amp;rsquo;s not the case that every
+Services&amp;rsquo; path: it is sparse.  That is, it&amp;rsquo;s not the case that every
 element in a path necessarily identifies an object at that location
 (in direct contrast with JNDI, where every atomic name in a compound
 name identifies a context).  In this regard, a path is like a pointer
@@ -751,7 +874,7 @@ nothing?  Was it loaded from disk?  Served over the network?  You
 don&amp;rsquo;t know and you don&amp;rsquo;t care.&lt;/p&gt;
 &lt;p&gt;For certain cases, name resolution is absurdly simple: someone
 explicitly bound a textual string into a &lt;code&gt;Context&lt;/code&gt; under, say, the
-name &amp;ldquo;&lt;code&gt;hoopy&lt;/code&gt;&amp;quot;; you asked for the &lt;code&gt;Object&lt;/code&gt; bound under &amp;ldquo;&lt;code&gt;hoopy&lt;/code&gt;&amp;quot;; and
+name &amp;ldquo;&lt;code&gt;hoopy&lt;/code&gt;&amp;rdquo;; you asked for the &lt;code&gt;Object&lt;/code&gt; bound under &amp;ldquo;&lt;code&gt;hoopy&lt;/code&gt;&amp;rdquo;; and
 lo and behold you got back that very string—perhaps &amp;ldquo;&lt;code&gt;frood&lt;/code&gt;&amp;quot;—as a
 Java &lt;code&gt;String&lt;/code&gt; object.  Nothing fancy here.&lt;/p&gt;
 &lt;h4 id=&#34;objectfactory&#34;&gt;&lt;code&gt;ObjectFactory&lt;/code&gt;&lt;/h4&gt;

@@ -11,7 +11,7 @@
 <meta property='og:site_name' content='Blame Laird'>
 <meta property='og:type' content='article'><meta property='article:section' content='blog'><meta property='article:tag' content='java'><meta property='article:tag' content='jndi'><meta property='article:tag' content='config'><meta property='article:published_time' content='2021-12-30T16:22:37-08:00'/><meta property='article:modified_time' content='2021-12-30T16:22:37-08:00'/><meta name='twitter:card' content='summary'>
 
-<meta name="generator" content="Hugo 0.92.1" />
+<meta name="generator" content="Hugo 0.96.0" />
 
   <title>Java Configuration: JNDI and Naming Operations • Blame Laird</title>
   <link rel='canonical' href='https://ljnelson.github.io/blog/java-configuration-jndi-and-naming-operations/'>
@@ -533,7 +533,7 @@ nothing?  Was it loaded from disk?  Served over the network?  You
 don&rsquo;t know and you don&rsquo;t care.</p>
 <p>For certain cases, name resolution is absurdly simple: someone
 explicitly bound a textual string into a <code>Context</code> under, say, the
-name &ldquo;<code>hoopy</code>&quot;; you asked for the <code>Object</code> bound under &ldquo;<code>hoopy</code>&quot;; and
+name &ldquo;<code>hoopy</code>&rdquo;; you asked for the <code>Object</code> bound under &ldquo;<code>hoopy</code>&rdquo;; and
 lo and behold you got back that very string—perhaps &ldquo;<code>frood</code>&quot;—as a
 Java <code>String</code> object.  Nothing fancy here.</p>
 <h4 id="objectfactory"><code>ObjectFactory</code></h4>
