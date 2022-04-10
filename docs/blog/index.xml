@@ -9,6 +9,220 @@
     <webMaster>ljnelson@gmail.com (Laird Nelson)</webMaster>
     <lastBuildDate>Fri, 17 Dec 2021 14:18:00 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Determinism, Presence and Absence</title>
+      <link>https://ljnelson.github.io/blog/presence-and-absence/</link>
+      <pubDate>Sun, 10 Apr 2022 14:08:24 -0700</pubDate>
+      <author>ljnelson@gmail.com (Laird Nelson)</author>
+      <guid>https://ljnelson.github.io/blog/presence-and-absence/</guid>
+      <description>&lt;div&gt;
+  &lt;h2 id=&#34;table-of-contents&#34;&gt;Table Of Contents&lt;/h2&gt;
+  &lt;nav id=&#34;TableOfContents&#34;&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href=&#34;#determinism-presence-and-absence&#34;&gt;Determinism, Presence and Absence&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#determinism&#34;&gt;Determinism&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#presence-and-absence&#34;&gt;Presence and Absence&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#introducing-optionalsupplier&#34;&gt;Introducing &lt;code&gt;OptionalSupplier&lt;/code&gt;&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&#34;determinism-presence-and-absence&#34;&gt;Determinism, Presence and Absence&lt;/h2&gt;
+&lt;p&gt;In this ongoing series related to Java configuration I&amp;rsquo;ve most
+recently covered &lt;a href=&#34;https://ljnelson.github.io/blog/qualifiers/&#34;&gt;what qualifiers are&lt;/a&gt;.  They are strongly related to &lt;a href=&#34;https://ljnelson.github.io/blog/paths/&#34;&gt;what paths are&lt;/a&gt;.  A path picks out some possible objects in
+objectspace.  Those objects may or may not exist.  Whether they are
+known to exist, and for how long, is the subject of this post.&lt;/p&gt;
+&lt;h2 id=&#34;determinism&#34;&gt;Determinism&lt;/h2&gt;
+&lt;p&gt;Determinism is, very loosely speaking: if you put the same stuff in
+twice, you&amp;rsquo;ll get the same result twice.&lt;/p&gt;
+&lt;p&gt;What does &amp;ldquo;same&amp;rdquo; mean?  For most purposes, &amp;ldquo;same&amp;rdquo; can simply mean
+&amp;ldquo;indistinguishable&amp;rdquo;.&lt;/p&gt;
+&lt;p&gt;If I have a sane implementation of &lt;code&gt;public final int add(final int a, final int b)&lt;/code&gt;, then if you call this method 47 times, supplying it
+with &lt;code&gt;1&lt;/code&gt; and &lt;code&gt;1&lt;/code&gt; respectively each time, you&amp;rsquo;ll get &lt;code&gt;2&lt;/code&gt;, each time.&lt;/p&gt;
+&lt;p&gt;Why does this matter in configuration land?  It&amp;rsquo;s kind of a
+Schrödinger&amp;rsquo;s cat situation.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s say you have a &lt;code&gt;Supplier&amp;lt;? extends String&amp;gt;&lt;/code&gt; in your hand and you&amp;rsquo;re about to call
+its &lt;code&gt;get()&lt;/code&gt; method.  Will it return a value?&lt;/p&gt;
+&lt;p&gt;Will it throw an exception?&lt;/p&gt;
+&lt;p&gt;You don&amp;rsquo;t know until you try it.  So OK, let&amp;rsquo;s say you call it.  Boom:
+it throws an exception.&lt;/p&gt;
+&lt;p&gt;If you call it again, will it throw an exception again?  Will it be an
+exception that is indistinguishable from the prior one?  Or will you
+get a value this time?&lt;/p&gt;
+&lt;p&gt;You don&amp;rsquo;t know; you have to try it.  So OK, let&amp;rsquo;s say you call it
+again.  This time it returns &amp;ldquo;Hello, world!&amp;rdquo;.&lt;/p&gt;
+&lt;p&gt;This supplier is non-deterministic.  There&amp;rsquo;s no way to know what it is
+going to do.  To learn what it&amp;rsquo;s going to do, you could read the
+documentation, which might or might not be correct.  Perhaps the
+documentation mentions that it could throw a &lt;code&gt;NoSuchElementException&lt;/code&gt;
+at any point for any reason.  Now you know it&amp;rsquo;s non-deterministic.  It
+would be kind of nice if this information were actually available
+programmatically.&lt;/p&gt;
+&lt;p&gt;Suppose this time you have a different &lt;code&gt;Supplier&amp;lt;? extends String&amp;gt;&lt;/code&gt; in
+your hand.  Suppose you call it 347 times and it returns &amp;ldquo;Hello,
+world!&amp;rdquo; each of those times.  Is it deterministic?  Maybe; you still
+don&amp;rsquo;t know.&lt;/p&gt;
+&lt;p&gt;Determinism is critical in configuration land because it helps you
+understand when a piece of configuration might change (and I haven&amp;rsquo;t
+even &lt;em&gt;begun&lt;/em&gt; to dive into the fetid swamp that is mutable
+configuration) and when it is guaranteed (to the extent possible) to
+be constant.&lt;/p&gt;
+&lt;h2 id=&#34;presence-and-absence&#34;&gt;Presence and Absence&lt;/h2&gt;
+&lt;p&gt;Some values in configuration land are &lt;em&gt;present&lt;/em&gt;.  If I ask a loading
+system for a type of &lt;a href=&#34;https://ljnelson.github.io/blog/qualifiers/&#34;&gt;qualified&lt;/a&gt;
+object, the loading system might return me a suitable value.  That
+value is &lt;em&gt;present&lt;/em&gt;: I asked for it, and I got it.  (If I ask a loading
+system for it again, will I get the same object back?  That&amp;rsquo;s
+determinism, an orthoganal concept.)&lt;/p&gt;
+&lt;p&gt;Some values in configuration land are &lt;em&gt;absent&lt;/em&gt;.  If I ask a loading
+system for a type of &lt;a href=&#34;https://ljnelson.github.io/blog/qualifiers/&#34;&gt;qualified&lt;/a&gt;
+object, the loading system might &lt;em&gt;not&lt;/em&gt; return me a suitable value.
+That value is &lt;em&gt;absent&lt;/em&gt;: I asked for it, and I didn&amp;rsquo;t get anything.
+Again, determinism and absence are orthogonal.&lt;/p&gt;
+&lt;p&gt;Additionally: &lt;strong&gt;presence and absence have nothing to do with &lt;code&gt;null&lt;/code&gt;.&lt;/strong&gt;
+Some present values can be &lt;code&gt;null&lt;/code&gt; and it&amp;rsquo;s entirely possible to
+represent absence with an object.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s go back to the &lt;code&gt;Supplier&lt;/code&gt; example.  If you were able to query
+the &lt;code&gt;Supplier&lt;/code&gt; to see what sorts of machinery it hides, you could see
+whether you might have to call &lt;code&gt;get()&lt;/code&gt; one time or many times, and you
+could tell whether, if it returns &lt;code&gt;null&lt;/code&gt;, that represents the presence
+of a value explicitly set to &lt;code&gt;null&lt;/code&gt; or the absence of a value
+altogether.&lt;/p&gt;
+&lt;p&gt;If you could also query the supplier to find out whether the presence
+or absence it reports is permanent or transient, then you would also
+know whether it was deterministic.&lt;/p&gt;
+&lt;p&gt;In practice, these orthogonal concepts can be folded together into,
+say, an &lt;code&gt;enum&lt;/code&gt; whose values might be:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;ABSENT&lt;/code&gt;: describes permanent (and hence deterministic) absence.
+In the &lt;code&gt;Supplier&lt;/code&gt; example, there really isn&amp;rsquo;t any point to calling
+the &lt;code&gt;get()&lt;/code&gt; method.  If we say that absence is indicated by the
+throwing of an exception, for example, then any time you call
+&lt;code&gt;get()&lt;/code&gt; you are guaranteed it will throw an exception.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;PRESENT&lt;/code&gt;: describes permanent (and hence deterministic) presence.
+In the &lt;code&gt;Supplier&lt;/code&gt; example, you can call the &lt;code&gt;get()&lt;/code&gt; method once and
+be confident that you&amp;rsquo;ll receive the one value it will forever
+return.  That value, of course, might be &lt;code&gt;null&lt;/code&gt;.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;DETERMINISTIC&lt;/code&gt;: describes permanent absence or presence, but you
+don&amp;rsquo;t know which until you try.  In the &lt;code&gt;Supplier&lt;/code&gt; example, maybe
+&lt;code&gt;get()&lt;/code&gt; will return a value (which may be &lt;code&gt;null&lt;/code&gt;) and maybe it will
+throw an exception.  Whatever it does, it will do for every
+subsequent invocation.  That&amp;rsquo;s useful.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;code&gt;NON_DETERMINISTIC&lt;/code&gt;: who knows what will happen.  This is the
+default mode of &lt;code&gt;Supplier&lt;/code&gt;s everywhere.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Some configuration systems clumsily stumble around these concepts,
+some with better results than others:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;MicroProfile Config and good old System properties are the worst
+here, since they conflate the concept of &lt;code&gt;null&lt;/code&gt; and, in some cases,
+empty strings, with value absence.  Oops.  At least you can test if
+the System properties contain a key to discover absence
+vs. presence of a given value.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Lightbend&amp;rsquo;s Typesafe Config tries very hard to do this but still
+falls down a little bit.  You can &lt;a href=&#34;https://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html#hasPathOrNull-java.lang.String-&#34;&gt;dig into the
+&lt;code&gt;hasPathOrNull(String)&lt;/code&gt;
+javadoc&lt;/a&gt;
+to see the gymnastics, and don&amp;rsquo;t forget to consider that although
+it calls itself an immutable configuration system there&amp;rsquo;s also
+&lt;a href=&#34;https://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigFactory.html#invalidateCaches--&#34;&gt;&lt;code&gt;invalidateCaches()&lt;/code&gt;&lt;/a&gt;
+to pay attention to.  So much for determinism!&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;JNDI at least knows that &lt;code&gt;null&lt;/code&gt; is a valid value, so defines the
+&lt;a href=&#34;https://docs.oracle.com/en/java/javase/17/docs/api/java.naming/javax/naming/NameNotFoundException.html&#34;&gt;&lt;code&gt;NameNotFoundException&lt;/code&gt;&lt;/a&gt;
+type, so you can distinguish between absence and presence.  In
+theory, a &lt;code&gt;Context&lt;/code&gt;&amp;rsquo;s &lt;code&gt;environment&lt;/code&gt; could contain this information,
+but it is not standardized.&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Jakarta RESTful Web Services is obviously an HTTP-centric
+specification and so can take advantage of the various HTTP caching
+directives.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id=&#34;introducing-optionalsupplier&#34;&gt;Introducing &lt;code&gt;OptionalSupplier&lt;/code&gt;&lt;/h2&gt;
+&lt;p&gt;To solve this problem, let&amp;rsquo;s introduce &lt;code&gt;OptionalSupplier&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Wait, you say, how come we can&amp;rsquo;t just use &lt;code&gt;java.util.Optional&lt;/code&gt;?
+Because &lt;code&gt;Optional&lt;/code&gt; is designed for &lt;code&gt;Stream&lt;/code&gt; operations that cannot or
+should not return &lt;code&gt;null&lt;/code&gt;, and so deliberately equates &lt;code&gt;null&lt;/code&gt; with
+&amp;ldquo;emptiness&amp;rdquo;, a concept similar to, but not equal to, absence.&lt;/p&gt;
+&lt;p&gt;Nevertheless, some of the fluent methods on &lt;code&gt;Optional&lt;/code&gt; are quite
+useful.  So what if we took the spirit of &lt;code&gt;java.util.Optional&lt;/code&gt; and
+applied it to a &lt;code&gt;Supplier&lt;/code&gt;, with explicit rules on how &lt;code&gt;get()&lt;/code&gt;
+behaves, allowing for the possibility of &lt;code&gt;null&lt;/code&gt; as a valid value?&lt;/p&gt;
+&lt;p&gt;Then you could do things like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#f0f0f0;-moz-tab-size:2;-o-tab-size:2;tab-size:2;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;switch&lt;/span&gt; &lt;span style=&#34;color:#666&#34;&gt;(&lt;/span&gt;optionalSupplier&lt;span style=&#34;color:#666&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#4070a0&#34;&gt;determinism&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;())&lt;/span&gt; &lt;span style=&#34;color:#666&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;case&lt;/span&gt; ABSENT&lt;span style=&#34;color:#666&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// You&amp;#39;re never going to get a value; use a default
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// value instead maybe. Or you could throw an exception.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// Or you could go ahead and call get() and let *it*
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// throw an exception to indicate absence. Here we
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// use a default value.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  greeting &lt;span style=&#34;color:#666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#4070a0&#34;&gt;&amp;#34;Hello, world!&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;break&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;case&lt;/span&gt; PRESENT&lt;span style=&#34;color:#666&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// You only have to call get() once, and it won&amp;#39;t throw.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// It will always return the same value.  You could use
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// this information later to decide what to do about
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// caching and such.  Note the lack of the try/catch block.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  greeting &lt;span style=&#34;color:#666&#34;&gt;=&lt;/span&gt; optionalSupplier&lt;span style=&#34;color:#666&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#4070a0&#34;&gt;get&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;break&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;case&lt;/span&gt; DETERMINISTIC&lt;span style=&#34;color:#666&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// Whatever get() does, it will always do, but we don&amp;#39;t
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// know what it will do.  Guard appropriately.  With this
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// information you might be able to decide caching semantics
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// or abort early.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;try&lt;/span&gt; &lt;span style=&#34;color:#666&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    greeting &lt;span style=&#34;color:#666&#34;&gt;=&lt;/span&gt; optionalSupplier&lt;span style=&#34;color:#666&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#4070a0&#34;&gt;get&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#666&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#666&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;final&lt;/span&gt; NoSuchElementException permanentlyAbsent&lt;span style=&#34;color:#666&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#666&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// forever absent; use a default value, maybe?
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;    greeting &lt;span style=&#34;color:#666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#4070a0&#34;&gt;&amp;#34;Hello, world!&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#666&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;break&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;case&lt;/span&gt; NON_DETERMINISTIC&lt;span style=&#34;color:#666&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// We don&amp;#39;t know what get() is going to do when it is called.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// Guard appropriately, and now you know that greeting shouldn&amp;#39;t
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// be cached, or, if you want to cache it, that a new value for
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// it might be returned by a get() invocation at any time.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;  &lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;try&lt;/span&gt; &lt;span style=&#34;color:#666&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    greeting &lt;span style=&#34;color:#666&#34;&gt;=&lt;/span&gt; optionalSupplier&lt;span style=&#34;color:#666&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#4070a0&#34;&gt;get&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;();&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#666&#34;&gt;}&lt;/span&gt; &lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;catch&lt;/span&gt; &lt;span style=&#34;color:#666&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;final&lt;/span&gt; NoSuchElementException absentForNow&lt;span style=&#34;color:#666&#34;&gt;)&lt;/span&gt; &lt;span style=&#34;color:#666&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// Absent, but optionalSupplier.get() might return a
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// present value later.  For this example we just use a
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;    &lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// default value.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;    greeting &lt;span style=&#34;color:#666&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#4070a0&#34;&gt;&amp;#34;Hello, world!&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#666&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;break&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;default&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;:&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  &lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;throw&lt;/span&gt; &lt;span style=&#34;color:#007020;font-weight:bold&#34;&gt;new&lt;/span&gt; AssertionError&lt;span style=&#34;color:#666&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#4070a0&#34;&gt;&amp;#34;Impossible enum constant: &amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#666&#34;&gt;+&lt;/span&gt; optionalSupplier&lt;span style=&#34;color:#666&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#4070a0&#34;&gt;determinism&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;());&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#666&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Or you could do some fluentish stuff like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;background-color:#f0f0f0;-moz-tab-size:2;-o-tab-size:2;tab-size:2;&#34;&gt;&lt;code class=&#34;language-java&#34; data-lang=&#34;java&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// This looks just like Optional.orElse(), but of course at the
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// end of all this greeting may very well be null.  Absence is
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// not java.util.Optional emptiness.
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;&lt;/span&gt;String greeting &lt;span style=&#34;color:#666&#34;&gt;=&lt;/span&gt; optionalSupplier&lt;span style=&#34;color:#666&#34;&gt;.&lt;/span&gt;&lt;span style=&#34;color:#4070a0&#34;&gt;orElse&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;(&lt;/span&gt;&lt;span style=&#34;color:#4070a0&#34;&gt;&amp;#34;Hello, World!&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#666&#34;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// This assertion, in other words, might fail:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#60a0b0;font-style:italic&#34;&gt;// assert greeting != null
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;So now we have notions of what a path is, what qualifiers are, and
+whether any given value in configuration land is permanently or
+transiently present or absent.  There&amp;rsquo;s just one last foundational
+piece to this whole thing, and that&amp;rsquo;s subtyping and Java type
+assignability semantics—coming up next.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Qualifiers</title>
       <link>https://ljnelson.github.io/blog/qualifiers/</link>
       <pubDate>Sun, 10 Apr 2022 12:39:47 -0700</pubDate>
