@@ -6,7 +6,7 @@ tags: ['java', 'config']
 ---
 {{< toc >}}
 
-# Paths
+## Paths
 
 In this ongoing series related to Java configuration, I've most
 recently covered [what it might look like if you had a `ServiceLoader`

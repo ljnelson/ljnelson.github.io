@@ -16,10 +16,14 @@
       <guid>https://ljnelson.github.io/blog/paths/</guid>
       <description>&lt;div&gt;
   &lt;h2 id=&#34;table-of-contents&#34;&gt;Table Of Contents&lt;/h2&gt;
-  &lt;nav id=&#34;TableOfContents&#34;&gt;&lt;/nav&gt;
+  &lt;nav id=&#34;TableOfContents&#34;&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href=&#34;#paths&#34;&gt;Paths&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;
 &lt;/div&gt;
 
-&lt;h1 id=&#34;paths&#34;&gt;Paths&lt;/h1&gt;
+&lt;h2 id=&#34;paths&#34;&gt;Paths&lt;/h2&gt;
 &lt;p&gt;In this ongoing series related to Java configuration, I&amp;rsquo;ve most
 recently covered &lt;a href=&#34;https://ljnelson.github.io/blog/service-loader-requests/&#34;&gt;what it might look like if you had a &lt;code&gt;ServiceLoader&lt;/code&gt;
 that could take requests&lt;/a&gt;.  I introduced the notion of a &lt;em&gt;path&lt;/em&gt;, a sparsely populated
