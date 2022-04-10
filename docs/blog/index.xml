@@ -9,6 +9,171 @@
     <webMaster>ljnelson@gmail.com (Laird Nelson)</webMaster>
     <lastBuildDate>Fri, 17 Dec 2021 14:18:00 -0800</lastBuildDate><atom:link href="https://ljnelson.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Qualifiers</title>
+      <link>https://ljnelson.github.io/blog/qualifiers/</link>
+      <pubDate>Sun, 10 Apr 2022 12:39:47 -0700</pubDate>
+      <author>ljnelson@gmail.com (Laird Nelson)</author>
+      <guid>https://ljnelson.github.io/blog/qualifiers/</guid>
+      <description>&lt;div&gt;
+  &lt;h2 id=&#34;table-of-contents&#34;&gt;Table Of Contents&lt;/h2&gt;
+  &lt;nav id=&#34;TableOfContents&#34;&gt;
+  &lt;ul&gt;
+    &lt;li&gt;&lt;a href=&#34;#qualifiers&#34;&gt;Qualifiers&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#jsr-330-and-jakarta-dependency-injection&#34;&gt;JSR-330 and Jakarta Dependency Injection&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#qualifiers-suitability-and-ambiguity&#34;&gt;Qualifiers, Suitability and Ambiguity&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#qualifiers-and-just-enough-set-theory&#34;&gt;Qualifiers and Just Enough Set Theory&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;&lt;a href=&#34;#the-model&#34;&gt;The Model&lt;/a&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&#34;qualifiers&#34;&gt;Qualifiers&lt;/h2&gt;
+&lt;p&gt;In this ongoing series related to Java configuration, I&amp;rsquo;ve most
+recently covered &lt;a href=&#34;https://ljnelson.github.io/blog/paths/&#34;&gt;what a path is&lt;/a&gt;.  I
+described what a path consists of, and introduced the notion of
+&lt;em&gt;qualifiers&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;In this post I&amp;rsquo;ll talk a bit more about qualifiers.&lt;/p&gt;
+&lt;h2 id=&#34;jsr-330-and-jakarta-dependency-injection&#34;&gt;JSR-330 and Jakarta Dependency Injection&lt;/h2&gt;
+&lt;p&gt;I think that good old JSR-330 (now &lt;a href=&#34;https://jakarta.ee/specifications/dependency-injection/2.0&#34;&gt;Jakarta Dependency
+Injection&lt;/a&gt;)
+was the first to explicitly define the notion of a
+&lt;a href=&#34;https://jakarta.ee/specifications/dependency-injection/2.0/apidocs/jakarta/inject/qualifier&#34;&gt;qualifier&lt;/a&gt;.
+In Jakarta Dependency Injection&amp;rsquo;s case, a qualifier is necessarily an
+annotation, but disregard that for the time being, because it&amp;rsquo;s not at
+all important.&lt;/p&gt;
+&lt;p&gt;The documentation is terse to the point of being almost useless, but
+if you look at it long enough you start to see that a
+qualifier—the abstract notion, mind you—is an immutable
+value for an immutable, usually unnamed, implied attribute.  (I&amp;rsquo;ve
+been &lt;a href=&#34;https://lairdnelson.wordpress.com/2017/01/31/cdi-qualifiers-are-values/&#34;&gt;somewhat fascinated by all
+this&lt;/a&gt;
+for quite a while now.)&lt;/p&gt;
+&lt;p&gt;So in the Jakarta Dependency Injection documentation, the
+&lt;a href=&#34;https://jakarta.ee/specifications/dependency-injection/2.0/apidocs/jakarta/inject/qualifier&#34;&gt;&lt;code&gt;@Leather&lt;/code&gt;&lt;/a&gt;
+annotation represents a value for some sort of unnamed key, say,
+&lt;code&gt;material&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;What&amp;rsquo;s so special about a qualifier being an annotation?  Nothing.
+Making a qualifier an annotation is an easy way to create an immutable
+key value pair, that&amp;rsquo;s all.&lt;/p&gt;
+&lt;p&gt;In Jakarta Dependency Injection, a class can be annotated with many
+qualifier annotations.  That just means it can have many qualifiers,
+i.e. a set of immutable key value pairs.&lt;/p&gt;
+&lt;p&gt;Together, a type and qualifiers constitute a path &lt;a href=&#34;https://ljnelson.github.io/blog/paths/&#34;&gt;as we&amp;rsquo;ve defined
+it&lt;/a&gt;.  That&amp;rsquo;s interesting.&lt;/p&gt;
+&lt;p&gt;That is: in Jakarta Dependency Injection, when you ask for a
+conformant system to inject an object, you are asking it to supply you
+with an object of a particular type and with particular qualifiers.
+The actual machinery that does this isn&amp;rsquo;t concerned with injection at
+all.  It&amp;rsquo;s just logically making a &lt;a href=&#34;https://ljnelson.github.io/blog/paths/&#34;&gt;path&lt;/a&gt;
+of sorts out of the information you&amp;rsquo;ve supplied (the type and
+qualifiers) and satisfying the loading request.&lt;/p&gt;
+&lt;p&gt;Hmm, this all &lt;a href=&#34;https://ljnelson.github.io/blog/paths/&#34;&gt;sounds familiar&lt;/a&gt;, doesn&amp;rsquo;t
+it?&lt;/p&gt;
+&lt;h2 id=&#34;qualifiers-suitability-and-ambiguity&#34;&gt;Qualifiers, Suitability and Ambiguity&lt;/h2&gt;
+&lt;p&gt;In fact, the conformant system will frequently not have &lt;em&gt;exactly&lt;/em&gt; the
+object you were looking for, but it may have one that is &lt;em&gt;suitable&lt;/em&gt;.
+The concepts of qualifiers and suitability are intertwined and we&amp;rsquo;ll
+come back to their relationship soon.&lt;/p&gt;
+&lt;p&gt;At this point we&amp;rsquo;ve come to realize a few important things:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A qualifier is just an additional facet of a load request.&lt;/li&gt;
+&lt;li&gt;A qualifier doesn&amp;rsquo;t have to be an annotation.&lt;/li&gt;
+&lt;li&gt;Qualifiers have nothing intrinsically to do with dependency
+injection.  It&amp;rsquo;s just that JSR-330 happens to have defined the
+term.&lt;/li&gt;
+&lt;li&gt;In systems that use qualifiers, a request might be fufilled with
+something that is exactly what was requested, or something that was
+suitable for the request.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;In a dependency injection system, ambiguity is the enemy.  Sometimes a
+load request will exactly identify one object.  In that case, the
+dependency injection system satisfies the load request and everything
+is great.  Sometimes a load request, however, will identify two
+different objects that are both suitable.  The dependency injection in
+this case normally fails the request and reports that there was
+ambiguity.&lt;/p&gt;
+&lt;p&gt;In a configuration system, ambiguity is not necessarily the enemy.
+Frequently there are suitable values that get ranked or prioritized or
+stacked or otherwise arranged so that you always get &lt;em&gt;something&lt;/em&gt; if at
+all possible.  This is largely because configuration, unlike business
+objectspace, describes many different environments.&lt;/p&gt;
+&lt;p&gt;But apart from the ambiguity angle, &lt;strong&gt;a configuration system is just a
+dependency injection system without the injection part&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Now let&amp;rsquo;s come back to ambiguity and qualifiers and suitability.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s say I ask for a &lt;code&gt;String&lt;/code&gt; under the name &lt;code&gt;hostname&lt;/code&gt;.  As we&amp;rsquo;ve
+&lt;a href=&#34;https://ljnelson.github.io/blog/paths/&#34;&gt;seen&lt;/a&gt;, a path can be reduced to a set of
+qualifiers, so this could be represented in notation I just made up
+like this:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;{ name = hostname, type = java.lang.String }
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Let&amp;rsquo;s actually refine this.  Let&amp;rsquo;s say that I still ask for a &lt;code&gt;String&lt;/code&gt;
+under the name &lt;code&gt;hostname&lt;/code&gt;, but somehow the fact that my class that is
+doing this is in an application that is running in the test
+environment gets captured.  That might look like this:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;{ name = hostname, type = java.lang.String, env = test }
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Let&amp;rsquo;s refine this again.  Let&amp;rsquo;s say that I still ask for a &lt;code&gt;String&lt;/code&gt;
+under the name &lt;code&gt;hostname&lt;/code&gt;, but somehow the fact that my class that is
+doing this is in an application that is not only running in the test
+environment but also in the west region:&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;{ name = hostname, type = java.lang.String, env = test, region = west }
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;Let&amp;rsquo;s further suppose that the loading system doesn&amp;rsquo;t actually have a
+value that exactly matches all this.  Let&amp;rsquo;s say that it can furnish a
+value whose &lt;code&gt;type&lt;/code&gt; is &lt;code&gt;java.lang.String&lt;/code&gt;, whose &lt;code&gt;name&lt;/code&gt; is &lt;code&gt;hostname&lt;/code&gt;
+and whose &lt;code&gt;region&lt;/code&gt; is &lt;code&gt;west&lt;/code&gt; (note: no &lt;code&gt;env&lt;/code&gt; setting).  Should this
+value &amp;ldquo;match&amp;rdquo; or not?  Is this value suitable, in other words?&lt;/p&gt;
+&lt;p&gt;Or: given a request path of &lt;code&gt;{ name = hostname, type = java.lang.String, env = test, region = west }&lt;/code&gt;, does a value path of
+&lt;code&gt;{ name = hostname, type = java.lang.String, region = west }&lt;/code&gt; match?
+Is it suitable?&lt;/p&gt;
+&lt;p&gt;In a dependency injection system like CDI, the answer is no: the
+injection point—the request path—does not have a
+subset of the qualifiers of the proposed value.  Game over.&lt;/p&gt;
+&lt;p&gt;But there is a sense in configuration land that we &lt;em&gt;do&lt;/em&gt; want this
+value to be suitable.  It&amp;rsquo;s not &lt;em&gt;maximally&lt;/em&gt; suitable, since it doesn&amp;rsquo;t
+exactly match all the qualifiers, but it doesn&amp;rsquo;t redefine any of them
+(i.e. the &lt;code&gt;name&lt;/code&gt;, &lt;code&gt;type&lt;/code&gt; and &lt;code&gt;region&lt;/code&gt; qualifiers all have the same
+values as those of the request).&lt;/p&gt;
+&lt;h2 id=&#34;qualifiers-and-just-enough-set-theory&#34;&gt;Qualifiers and Just Enough Set Theory&lt;/h2&gt;
+&lt;p&gt;If we try to translate this intuitive sense into something a little
+more concrete, it becomes clear that, for a given key, a set of
+qualifiers that omits that key is &lt;em&gt;suitable&lt;/em&gt; for a set of qualifiers
+that specifies that key.  But a set of qualifiers that has a different
+value for that key is not suitable.&lt;/p&gt;
+&lt;p&gt;It also turns out that if a set of qualifiers has keys in it that are
+not present in a requested set of qualifiers, that&amp;rsquo;s suitable too,
+though maybe not as suitable as we&amp;rsquo;d like.&lt;/p&gt;
+&lt;p&gt;From this we know that a model of qualifiers will need to be able to
+report the &lt;em&gt;intersection&lt;/em&gt; between two sets of qualifiers: the key
+value pairs they have in common.  And we know that this model will
+need to be able to report the &lt;em&gt;symmetric difference&lt;/em&gt; between two sets
+of qualifiers: the key value pairs that are contained in one but not
+the other.&lt;/p&gt;
+&lt;p&gt;Finally, given that qualifiers are likely to be represented
+persistently, a set of qualifiers must have a defined iteration order
+so that arbitrary changes in set ordering do not impact suitability
+calculations.&lt;/p&gt;
+&lt;h2 id=&#34;the-model&#34;&gt;The Model&lt;/h2&gt;
+&lt;p&gt;Putting it together, we can therefore say something like this:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A &lt;code&gt;Qualifiers&lt;/code&gt; is an immutable set of entries.&lt;/li&gt;
+&lt;li&gt;An entry is an immutable pairing of a &lt;code&gt;Comparable&lt;/code&gt; and an immutable
+object value.&lt;/li&gt;
+&lt;li&gt;A &lt;code&gt;Qualifiers&lt;/code&gt; can report its size.&lt;/li&gt;
+&lt;li&gt;A &lt;code&gt;Qualifiers&lt;/code&gt; may be empty.&lt;/li&gt;
+&lt;li&gt;A &lt;code&gt;Qualifiers&lt;/code&gt; can report its intersection size with respect to
+another &lt;code&gt;Qualifiers&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;A &lt;code&gt;Qualifiers&lt;/code&gt; can report its symmetric difference size with
+respect to another &lt;code&gt;Qualifiers&lt;/code&gt;.&lt;/li&gt;
+&lt;li&gt;Because of all this, &lt;code&gt;Qualifiers&lt;/code&gt; is a &lt;a href=&#34;https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/doc-files/ValueBased.html&#34;&gt;value-based
+class&lt;/a&gt;.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;We&amp;rsquo;ve now sketched what qualifiers look like, and what a path made up
+of them looks like.  We&amp;rsquo;ve also hinted at ambiguity and suitability.
+In the next post, we&amp;rsquo;ll look at the notions of determinism, presence
+and absence, which are the last foundational pieces to any
+configuration system.&lt;/p&gt;
+</description>
+    </item>
+    
+    <item>
       <title>Paths</title>
       <link>https://ljnelson.github.io/blog/paths/</link>
       <pubDate>Sun, 10 Apr 2022 10:52:18 -0700</pubDate>

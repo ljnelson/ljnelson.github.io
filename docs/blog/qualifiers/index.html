@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang='en' dir='auto'><head>
+  <meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='description' content='Table Of Contents  Qualifiers JSR-330 and Jakarta Dependency Injection Qualifiers, Suitability and Ambiguity Qualifiers and Just Enough Set Theory The Model    Qualifiers In this ongoing series related to Java configuration, I&rsquo;ve most recently covered what a path is. I described what a path consists of, and introduced the notion of qualifiers.
+In this post I&rsquo;ll talk a bit more about qualifiers.
+JSR-330 and Jakarta Dependency Injection I think that good old JSR-330 (now Jakarta Dependency Injection) was the first to explicitly define the notion of a qualifier.'>
+<meta name='theme-color' content='#001dc0'>
+
+<meta property='og:title' content='Qualifiers • Blame Laird'>
+<meta property='og:description' content='Table Of Contents  Qualifiers JSR-330 and Jakarta Dependency Injection Qualifiers, Suitability and Ambiguity Qualifiers and Just Enough Set Theory The Model    Qualifiers In this ongoing series related to Java configuration, I&rsquo;ve most recently covered what a path is. I described what a path consists of, and introduced the notion of qualifiers.
+In this post I&rsquo;ll talk a bit more about qualifiers.
+JSR-330 and Jakarta Dependency Injection I think that good old JSR-330 (now Jakarta Dependency Injection) was the first to explicitly define the notion of a qualifier.'>
+<meta property='og:url' content='https://ljnelson.github.io/blog/qualifiers/'>
+<meta property='og:site_name' content='Blame Laird'>
+<meta property='og:type' content='article'><meta property='article:section' content='blog'><meta property='article:tag' content='java'><meta property='article:tag' content='config'><meta property='article:published_time' content='2022-04-10T12:39:47-07:00'/><meta property='article:modified_time' content='2022-04-10T12:39:47-07:00'/><meta name='twitter:card' content='summary'>
+
+<meta name="generator" content="Hugo 0.96.0" />
+
+  <title>Qualifiers • Blame Laird</title>
+  <link rel='canonical' href='https://ljnelson.github.io/blog/qualifiers/'>
+  
+  
+  <link rel='icon' href='/images/dougflag.svg'>
+<link rel='stylesheet' href='/assets/css/main.ab98e12b.css'><link rel='stylesheet' href='/css/custom.css'><style>
+:root{--color-accent:#001dc0;}
+</style>
+
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-VPDL2GWEZY"></script>
+<script>
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+	gtag('config', 'G-VPDL2GWEZY', { 'anonymize_ip': false });
+}
+</script>
+
+  
+</head>
+<body class='page type-blog has-sidebar'>
+
+  <div class='site'><div id='sidebar' class='sidebar'>
+  <a class='screen-reader-text' href='#main-menu'>Skip to Main Menu</a>
+
+  <div class='container'><section class='widget widget-about sep-after'>
+  <header>
+    
+    <div class='logo'>
+      <a href='/'>
+        <img src='/images/dougflag.png'>
+      </a>
+    </div>
+    
+    <h2 class='title site-title '>
+      <a href='/'>
+      Blame Laird
+      </a>
+    </h2>
+    <div class='desc'>
+    Sum Ergo Mea Culpa Est
+    </div>
+  </header>
+
+</section>
+<section class='widget widget-search sep-after'>
+  <header>
+    <h4 class='title widget-title'>Search</h4>
+  </header>
+
+  <form action='/search' id='search-form' class='search-form'>
+    <label>
+      <span class='screen-reader-text'>Search</span>
+      <input id='search-term' class='search-term' type='search' name='q' placeholder='Search&hellip;'>
+    </label></form>
+
+</section>
+<section class='widget widget-taxonomy_cloud sep-after'>
+  <header>
+    <h4 class='title widget-title'>Tags</h4>
+  </header>
+
+  <div class='container list-container'>
+  <ul class='list taxonomy-cloud'><li>
+        <a href='/tags/config/' style='font-size:2em'>config</a>
+      </li><li>
+        <a href='/tags/java/' style='font-size:2em'>java</a>
+      </li><li>
+        <a href='/tags/jaxrs/' style='font-size:1em'>jaxrs</a>
+      </li><li>
+        <a href='/tags/jndi/' style='font-size:1em'>jndi</a>
+      </li><li>
+        <a href='/tags/personal/' style='font-size:1em'>personal</a>
+      </li></ul>
+</div>
+
+
+</section>
+</div>
+
+  <div class='sidebar-overlay'></div>
+</div><div class='main'><nav id='main-menu' class='menu main-menu' aria-label='Main Menu'>
+  <div class='container'>
+    <a class='screen-reader-text' href='#content'>Skip to Content</a>
+
+<button id='sidebar-toggler' class='sidebar-toggler' aria-controls='sidebar'>
+  <span class='screen-reader-text'>Toggle Sidebar</span>
+  <span class='open'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="3" y1="12" x2="21" y2="12" />
+<line x1="3" y1="6" x2="21" y2="6" />
+<line x1="3" y1="18" x2="21" y2="18" />
+</svg>
+</span>
+  <span class='close'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="18" y1="6" x2="6" y2="18" />
+<line x1="6" y1="6" x2="18" y2="18" />
+</svg>
+</span>
+</button>
+    <ul><li class='item'>
+        <a href='/'>Home</a>
+      </li><li class='item'>
+        <a href='https://about.me/lairdnelson'>About</a>
+      </li><li class='item current'>
+        <a aria-current='page' href='/blog/'>Blog</a>
+      </li></ul>
+  </div>
+</nav><div class='header-widgets'>
+        <div class='container'>
+    
+    <style>.widget-breadcrumbs li:after{content:'\2f '}</style>
+  <section class='widget widget-breadcrumbs sep-after'>
+    <nav id='breadcrumbs'>
+      <ol><li><a href='/'>Home</a></li><li><a href='/blog/'>Blog</a></li><li><span>Qualifiers</span></li></ol>
+    </nav>
+  </section></div>
+      </div>
+
+      <header id='header' class='header site-header'>
+        <div class='container sep-after'>
+          <div class='header-info'><p class='site-title title'>Blame Laird</p><p class='desc site-desc'>Sum Ergo Mea Culpa Est</p>
+          </div>
+        </div>
+      </header>
+
+      <main id='content'>
+
+
+<article lang='en' class='entry'>
+  <header class='header entry-header'>
+  <div class='container sep-after'>
+    <div class='header-info'>
+      <h1 class='title'>Qualifiers</h1>
+      
+
+    </div>
+    <div class='entry-meta'>
+  <span class='posted-on'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+<line x1="16" y1="2" x2="16" y2="6" />
+<line x1="8" y1="2" x2="8" y2="6" />
+<line x1="3" y1="10" x2="21" y2="10" />
+</svg>
+<span class='screen-reader-text'>Posted on </span>
+  <time class='entry-date' datetime='2022-04-10T12:39:47-07:00'>2022-04-10</time>
+</span>
+
+  
+  
+<span class='reading-time'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><circle cx="12" cy="12" r="10" />
+<polyline points="12 6 12 12 15 15" />
+</svg>
+6 mins read
+</span>
+
+
+</div>
+
+
+  </div>
+</header>
+
+  
+  
+
+  <div class='container entry-content'>
+  <div>
+  <h2 id="table-of-contents">Table Of Contents</h2>
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#qualifiers">Qualifiers</a></li>
+    <li><a href="#jsr-330-and-jakarta-dependency-injection">JSR-330 and Jakarta Dependency Injection</a></li>
+    <li><a href="#qualifiers-suitability-and-ambiguity">Qualifiers, Suitability and Ambiguity</a></li>
+    <li><a href="#qualifiers-and-just-enough-set-theory">Qualifiers and Just Enough Set Theory</a></li>
+    <li><a href="#the-model">The Model</a></li>
+  </ul>
+</nav>
+</div>
+
+<h2 id="qualifiers">Qualifiers</h2>
+<p>In this ongoing series related to Java configuration, I&rsquo;ve most
+recently covered <a href="/blog/paths/">what a path is</a>.  I
+described what a path consists of, and introduced the notion of
+<em>qualifiers</em>.</p>
+<p>In this post I&rsquo;ll talk a bit more about qualifiers.</p>
+<h2 id="jsr-330-and-jakarta-dependency-injection">JSR-330 and Jakarta Dependency Injection</h2>
+<p>I think that good old JSR-330 (now <a href="https://jakarta.ee/specifications/dependency-injection/2.0">Jakarta Dependency
+Injection</a>)
+was the first to explicitly define the notion of a
+<a href="https://jakarta.ee/specifications/dependency-injection/2.0/apidocs/jakarta/inject/qualifier">qualifier</a>.
+In Jakarta Dependency Injection&rsquo;s case, a qualifier is necessarily an
+annotation, but disregard that for the time being, because it&rsquo;s not at
+all important.</p>
+<p>The documentation is terse to the point of being almost useless, but
+if you look at it long enough you start to see that a
+qualifier—the abstract notion, mind you—is an immutable
+value for an immutable, usually unnamed, implied attribute.  (I&rsquo;ve
+been <a href="https://lairdnelson.wordpress.com/2017/01/31/cdi-qualifiers-are-values/">somewhat fascinated by all
+this</a>
+for quite a while now.)</p>
+<p>So in the Jakarta Dependency Injection documentation, the
+<a href="https://jakarta.ee/specifications/dependency-injection/2.0/apidocs/jakarta/inject/qualifier"><code>@Leather</code></a>
+annotation represents a value for some sort of unnamed key, say,
+<code>material</code>.</p>
+<p>What&rsquo;s so special about a qualifier being an annotation?  Nothing.
+Making a qualifier an annotation is an easy way to create an immutable
+key value pair, that&rsquo;s all.</p>
+<p>In Jakarta Dependency Injection, a class can be annotated with many
+qualifier annotations.  That just means it can have many qualifiers,
+i.e. a set of immutable key value pairs.</p>
+<p>Together, a type and qualifiers constitute a path <a href="/blog/paths/">as we&rsquo;ve defined
+it</a>.  That&rsquo;s interesting.</p>
+<p>That is: in Jakarta Dependency Injection, when you ask for a
+conformant system to inject an object, you are asking it to supply you
+with an object of a particular type and with particular qualifiers.
+The actual machinery that does this isn&rsquo;t concerned with injection at
+all.  It&rsquo;s just logically making a <a href="/blog/paths/">path</a>
+of sorts out of the information you&rsquo;ve supplied (the type and
+qualifiers) and satisfying the loading request.</p>
+<p>Hmm, this all <a href="/blog/paths/">sounds familiar</a>, doesn&rsquo;t
+it?</p>
+<h2 id="qualifiers-suitability-and-ambiguity">Qualifiers, Suitability and Ambiguity</h2>
+<p>In fact, the conformant system will frequently not have <em>exactly</em> the
+object you were looking for, but it may have one that is <em>suitable</em>.
+The concepts of qualifiers and suitability are intertwined and we&rsquo;ll
+come back to their relationship soon.</p>
+<p>At this point we&rsquo;ve come to realize a few important things:</p>
+<ul>
+<li>A qualifier is just an additional facet of a load request.</li>
+<li>A qualifier doesn&rsquo;t have to be an annotation.</li>
+<li>Qualifiers have nothing intrinsically to do with dependency
+injection.  It&rsquo;s just that JSR-330 happens to have defined the
+term.</li>
+<li>In systems that use qualifiers, a request might be fufilled with
+something that is exactly what was requested, or something that was
+suitable for the request.</li>
+</ul>
+<p>In a dependency injection system, ambiguity is the enemy.  Sometimes a
+load request will exactly identify one object.  In that case, the
+dependency injection system satisfies the load request and everything
+is great.  Sometimes a load request, however, will identify two
+different objects that are both suitable.  The dependency injection in
+this case normally fails the request and reports that there was
+ambiguity.</p>
+<p>In a configuration system, ambiguity is not necessarily the enemy.
+Frequently there are suitable values that get ranked or prioritized or
+stacked or otherwise arranged so that you always get <em>something</em> if at
+all possible.  This is largely because configuration, unlike business
+objectspace, describes many different environments.</p>
+<p>But apart from the ambiguity angle, <strong>a configuration system is just a
+dependency injection system without the injection part</strong>.</p>
+<p>Now let&rsquo;s come back to ambiguity and qualifiers and suitability.</p>
+<p>Let&rsquo;s say I ask for a <code>String</code> under the name <code>hostname</code>.  As we&rsquo;ve
+<a href="/blog/paths/">seen</a>, a path can be reduced to a set of
+qualifiers, so this could be represented in notation I just made up
+like this:</p>
+<pre tabindex="0"><code>{ name = hostname, type = java.lang.String }
+</code></pre><p>Let&rsquo;s actually refine this.  Let&rsquo;s say that I still ask for a <code>String</code>
+under the name <code>hostname</code>, but somehow the fact that my class that is
+doing this is in an application that is running in the test
+environment gets captured.  That might look like this:</p>
+<pre tabindex="0"><code>{ name = hostname, type = java.lang.String, env = test }
+</code></pre><p>Let&rsquo;s refine this again.  Let&rsquo;s say that I still ask for a <code>String</code>
+under the name <code>hostname</code>, but somehow the fact that my class that is
+doing this is in an application that is not only running in the test
+environment but also in the west region:</p>
+<pre tabindex="0"><code>{ name = hostname, type = java.lang.String, env = test, region = west }
+</code></pre><p>Let&rsquo;s further suppose that the loading system doesn&rsquo;t actually have a
+value that exactly matches all this.  Let&rsquo;s say that it can furnish a
+value whose <code>type</code> is <code>java.lang.String</code>, whose <code>name</code> is <code>hostname</code>
+and whose <code>region</code> is <code>west</code> (note: no <code>env</code> setting).  Should this
+value &ldquo;match&rdquo; or not?  Is this value suitable, in other words?</p>
+<p>Or: given a request path of <code>{ name = hostname, type = java.lang.String, env = test, region = west }</code>, does a value path of
+<code>{ name = hostname, type = java.lang.String, region = west }</code> match?
+Is it suitable?</p>
+<p>In a dependency injection system like CDI, the answer is no: the
+injection point—the request path—does not have a
+subset of the qualifiers of the proposed value.  Game over.</p>
+<p>But there is a sense in configuration land that we <em>do</em> want this
+value to be suitable.  It&rsquo;s not <em>maximally</em> suitable, since it doesn&rsquo;t
+exactly match all the qualifiers, but it doesn&rsquo;t redefine any of them
+(i.e. the <code>name</code>, <code>type</code> and <code>region</code> qualifiers all have the same
+values as those of the request).</p>
+<h2 id="qualifiers-and-just-enough-set-theory">Qualifiers and Just Enough Set Theory</h2>
+<p>If we try to translate this intuitive sense into something a little
+more concrete, it becomes clear that, for a given key, a set of
+qualifiers that omits that key is <em>suitable</em> for a set of qualifiers
+that specifies that key.  But a set of qualifiers that has a different
+value for that key is not suitable.</p>
+<p>It also turns out that if a set of qualifiers has keys in it that are
+not present in a requested set of qualifiers, that&rsquo;s suitable too,
+though maybe not as suitable as we&rsquo;d like.</p>
+<p>From this we know that a model of qualifiers will need to be able to
+report the <em>intersection</em> between two sets of qualifiers: the key
+value pairs they have in common.  And we know that this model will
+need to be able to report the <em>symmetric difference</em> between two sets
+of qualifiers: the key value pairs that are contained in one but not
+the other.</p>
+<p>Finally, given that qualifiers are likely to be represented
+persistently, a set of qualifiers must have a defined iteration order
+so that arbitrary changes in set ordering do not impact suitability
+calculations.</p>
+<h2 id="the-model">The Model</h2>
+<p>Putting it together, we can therefore say something like this:</p>
+<ul>
+<li>A <code>Qualifiers</code> is an immutable set of entries.</li>
+<li>An entry is an immutable pairing of a <code>Comparable</code> and an immutable
+object value.</li>
+<li>A <code>Qualifiers</code> can report its size.</li>
+<li>A <code>Qualifiers</code> may be empty.</li>
+<li>A <code>Qualifiers</code> can report its intersection size with respect to
+another <code>Qualifiers</code>.</li>
+<li>A <code>Qualifiers</code> can report its symmetric difference size with
+respect to another <code>Qualifiers</code>.</li>
+<li>Because of all this, <code>Qualifiers</code> is a <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/doc-files/ValueBased.html">value-based
+class</a>.</li>
+</ul>
+<p>We&rsquo;ve now sketched what qualifiers look like, and what a path made up
+of them looks like.  We&rsquo;ve also hinted at ambiguity and suitability.
+In the next post, we&rsquo;ll look at the notions of determinism, presence
+and absence, which are the last foundational pieces to any
+configuration system.</p>
+
+</div>
+
+  
+<footer class='entry-footer'>
+  <div class='container sep-before'><div class='tags'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M20.59,13.41l-7.17,7.17a2,2,0,0,1-2.83,0L2,12V2H12l8.59,8.59A2,2,0,0,1,20.59,13.41Z" />
+<line x1="7" y1="7" x2="7" y2="7" />
+</svg>
+<span class='screen-reader-text'>Tags: </span><a class='tag' href='/tags/java/'>java</a>, <a class='tag' href='/tags/config/'>config</a></div>
+
+  </div>
+</footer>
+
+
+</article>
+
+<nav class='entry-nav'>
+  <div class='container'><div class='prev-entry sep-before'>
+      <a href='/blog/paths/'>
+        <span aria-hidden='true'><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><line x1="20" y1="12" x2="4" y2="12" />
+<polyline points="10 18 4 12 10 6" />
+</svg>
+ Previous</span>
+        <span class='screen-reader-text'>Previous post: </span>Paths</a>
+    </div></div>
+</nav>
+
+
+
+
+      </main>
+
+      <footer id='footer' class='footer'>
+        <div class='container sep-before'><section class='widget widget-social_menu sep-after'><nav aria-label='Social Menu'>
+    <ul><li>
+        <a href='https://github.com/ljnelson' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Github account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+</svg>
+</a>
+      </li><li>
+        <a href='https://linkedin.com/in/ljnelson' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Linkedin account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
+<rect x="2" y="9" width="4" height="12" />
+<circle cx="4" cy="4" r="2" />
+</svg>
+</a>
+      </li><li>
+        <a href='https://www.youtube.com/channel/UCBUnNk5vMOw9D7EGwT8wfQQ' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Youtube account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z" />
+<polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" />
+</svg>
+</a>
+      </li><li>
+        <a href='https://instagram.com/chuggid' target='_blank' rel='noopener me'>
+          <span class='screen-reader-text'>Open Instagram account in new tab</span><svg
+  class="icon"
+  xmlns="http://www.w3.org/2000/svg"
+  viewbox="0 0 24 24"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  stroke-width="2"
+  aria-hidden="true"
+><rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+<path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+<line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+</svg>
+</a>
+      </li></ul>
+  </nav>
+</section><div class='copyright'>
+  <p> &copy; 2021-2022 Laird Nelson </p>
+</div>
+
+        </div>
+      </footer>
+
+    </div>
+  </div><script>window.__assets_js_src="/assets/js/"</script>
+
+<script src='/assets/js/main.c3bcf2df.js'></script><script src='/js/custom.js'></script>
+
+</body>
+
+</html>
+
